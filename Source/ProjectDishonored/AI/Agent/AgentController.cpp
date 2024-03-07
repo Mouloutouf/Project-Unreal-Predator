@@ -219,7 +219,7 @@ void AAgentController::UpdatePerception(AActor* _Actor, FAIStimulus _Stimulus)
 		return;
 
 	APlayerCharacter* Player = dynamic_cast<APlayerCharacter*>(_Actor);
-	if (Player != nullptr)
+	if (Player != nullptr && Player->GetIsDead() == false)
 	{
 		PlayerDetected = _Stimulus.WasSuccessfullySensed();
 		if (PlayerDetected == true)

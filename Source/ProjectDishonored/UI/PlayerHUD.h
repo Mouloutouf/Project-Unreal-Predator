@@ -14,6 +14,10 @@ class PROJECTDISHONORED_API APlayerHUD : public AHUD
 {
 	GENERATED_BODY()
 
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+	
 public:
 	APlayerHUD();
 	
@@ -24,15 +28,21 @@ public:
 	void SetReticleRed();
 	UFUNCTION(BlueprintCallable)
 	void SetReticleWhite();
-
+	
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void UpdateAmmoWidget(int _Value);
+	
+	UFUNCTION(BlueprintCallable)
+	void ShowGameOver();
 	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	FLinearColor ReticleColor;
 	
 public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool ShouldDrawReticle = true;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	UUserWidget* TakedownKeyWidget;
 
@@ -43,5 +53,8 @@ public:
 	UUserWidget* AmmoWidget;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	UUserWidget* HealthBarWidget;
+	UUserWidget* BarsWidget;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	UUserWidget* GameOverWidget;
 };

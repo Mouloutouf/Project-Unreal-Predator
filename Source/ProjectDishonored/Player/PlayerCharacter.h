@@ -12,6 +12,7 @@
 class AAgentCharacter;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHealthChangedSignature);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEnergyChangedSignature);
 
 UCLASS()
 class PROJECTDISHONORED_API APlayerCharacter : public ACharacter
@@ -53,8 +54,17 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void ChangeHealth(float _HealthChange);
 
+	UFUNCTION(BlueprintCallable)
+	void SetEnergy(float _NewEnergy);
+
+	UFUNCTION(BlueprintCallable)
+	void ChangeEnergy(float _EnergyChange);
+	
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void UpdateHealthUI();
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void UpdateEnergyUI();
 	
 	UFUNCTION(BlueprintCallable)
 	void TryGrabAgent();
@@ -83,6 +93,21 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void UpdateIsMovingForward(bool _State);
 
+	UFUNCTION(BlueprintCallable)
+	void DecreaseEnergy();
+
+	UFUNCTION(BlueprintCallable)
+	void DecreaseHealth();
+
+	UFUNCTION(BlueprintCallable)
+	void CheckEnergy();
+
+	UFUNCTION(BlueprintCallable)
+	void TryDecreaseHealth();
+
+	UFUNCTION(BlueprintCallable)
+	void Die();
+	
 private:
 	void MoveForward(float _AxisValue);
 	void MoveRight(float _AxisValue);
@@ -119,6 +144,10 @@ public:
 	bool GetIsInTakedown() const { return IsInTakeDown; }
 	bool GetIsMovingForward() const { return IsMovingForward; }
 	
+	bool GetCanPerformTakedown() const { return CanPerformTakedown; }
+
+	bool GetIsDead() const { return IsDead; }
+	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	UCameraComponent* FirstPersonCamera;
@@ -135,6 +164,8 @@ protected:
 	bool CanPerformCrouch = true;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool CanPerformSprint = true;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool CanPerformTakedown = true;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool IsCrouching;
@@ -163,9 +194,32 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float MaxHealth;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	float CurrentHealth;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool IsDead = false;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	int HealthDecreaseSteps = 1;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float HealthDecreaseWaitTime = 1;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	float HealthDecreaseCurrentTime;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool ShouldDecreaseHealth;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float MaxEnergy;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated)
+	float CurrentEnergy;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float EnergyDecreaseSpeed = 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float TakedownEnergyIncrease;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	float ControllerXSensitivity;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
@@ -192,6 +246,9 @@ protected:
 
 	UPROPERTY(BlueprintAssignable, BlueprintReadOnly)
 	FOnHealthChangedSignature OnHealthChanged;
+
+	UPROPERTY(BlueprintAssignable, BlueprintReadOnly)
+	FOnEnergyChangedSignature OnEnergyChanged;
 	
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)

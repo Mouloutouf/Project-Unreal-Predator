@@ -110,8 +110,9 @@ bool AAgentCharacter::CheckPathEnd()
 
 void AAgentCharacter::UpdateTakedown(bool _CanTakedown)
 {
-	PlayerReference->CurrentAgentInRange = _CanTakedown ? this : nullptr;
-	SetTakedownUIVisible(_CanTakedown);
+	bool CanActuallyTakedown = _CanTakedown && PlayerReference->GetCanPerformTakedown();
+	PlayerReference->CurrentAgentInRange = CanActuallyTakedown ? this : nullptr;
+	SetTakedownUIVisible(CanActuallyTakedown);
 }
 
 void AAgentCharacter::CheckTakedownDistance()

@@ -6,6 +6,11 @@
 #include "UMG/Public/Blueprint/UserWidget.h"
 #include "UMG/Public/Components/SlateWrapperTypes.h"
 
+void APlayerHUD::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
 APlayerHUD::APlayerHUD()
 {
 	SetReticleWhite();
@@ -25,4 +30,9 @@ void APlayerHUD::SetReticleRed()
 void APlayerHUD::SetReticleWhite()
 {
 	ReticleColor = FLinearColor(1, 1, 1, 1);
+}
+
+void APlayerHUD::ShowGameOver()
+{
+	SetWidgetVisible(true, GameOverWidget);
 }

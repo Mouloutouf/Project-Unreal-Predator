@@ -3,10 +3,10 @@
 
 #include "PlayerCharacter.h"
 
+#include "Blueprint/WidgetBlueprintLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
-#include "Net/UnrealNetwork.h"
 #include "Perception/AISense_Hearing.h"
 #include "ProjectDishonored/AI/Agent/AgentCharacter.h"
 
@@ -27,10 +27,7 @@ APlayerCharacter::APlayerCharacter()
 
 	ChildCrossbow = CreateDefaultSubobject<UChildActorComponent>(TEXT("ChildCrossbow"));
 	ChildCrossbow->SetupAttachment(FirstPersonCamera);
-	
 	ChildCrossbow->SetChildActorClass(ACrossbow::StaticClass());
-	ChildCrossbow->CreateChildActor();
-	CrossbowReference = dynamic_cast<ACrossbow*>(ChildCrossbow->GetChildActor());
 }
 
 void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -43,21 +40,30 @@ void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	CanPerformJump = CanPerformCrouch = CanPerformSprint = true;
+	CanPerformJump = CanPerformCrouch = CanPerformSprint = CanPerformTakedown = true;
 
 	CrossbowReference = dynamic_cast<ACrossbow*>(ChildCrossbow->GetChildActor());
 	
 	ControllerReference = dynamic_cast<APlayerController*>(GetController());
+	
 	HUDReference = dynamic_cast<APlayerHUD*>(ControllerReference->GetHUD());
+	HUDReference->ShouldDrawReticle = true;
 
 	StandingHeight = FirstPersonCamera->GetRelativeLocation().Z;
 	FirstPersonCamera->PostProcessSettings.VignetteIntensity = DefaultVignetteIntensity;
 	
 	OnHealthChanged.AddDynamic(this, &APlayerCharacter::UpdateHealthUI);
+	OnEnergyChanged.AddDynamic(this, &APlayerCharacter::UpdateEnergyUI);
 
 	SetHealth(MaxHealth);
+	SetEnergy(MaxEnergy);
 
 	NormalSpeed = GetCharacterMovement()->MaxWalkSpeed;
+
+	ControllerReference->SetShowMouseCursor(false);
+	UWidgetBlueprintLibrary::SetInputMode_GameOnly(ControllerReference);
+
+	SetActorEnableCollision(true);
 }
 
 void APlayerCharacter::EnableAbilities(bool _Enable)
@@ -84,7 +90,7 @@ void APlayerCharacter::EnableSprint(bool _Enable)
 
 void APlayerCharacter::ActivateSprint(bool _Activate)
 {
-	if (IsCrouching == true)
+	if (IsCrouching == true && _Activate == true)
 		ActivateCrouch(false, true);
 
 	EnableSprint(_Activate);
@@ -122,13 +128,27 @@ void APlayerCharacter::SetSpeed(float _NewSpeed)
 
 void APlayerCharacter::SetHealth(float _NewHealth)
 {
-	CurrentHealth = _NewHealth;
+	CurrentHealth = FMath::Clamp(_NewHealth, 0.0f, MaxHealth);
 	OnHealthChanged.Broadcast();
 }
 
 void APlayerCharacter::ChangeHealth(float _HealthChange)
 {
 	SetHealth(CurrentHealth + _HealthChange);
+
+	if (CurrentHealth <= 0)
+		Die();
+}
+
+void APlayerCharacter::SetEnergy(float _NewEnergy)
+{
+	CurrentEnergy = FMath::Clamp(_NewEnergy, 0.0f, MaxEnergy);
+	OnEnergyChanged.Broadcast();
+}
+
+void APlayerCharacter::ChangeEnergy(float _EnergyChange)
+{
+	SetEnergy(CurrentEnergy + _EnergyChange);
 }
 
 void APlayerCharacter::TryGrabAgent()
@@ -186,6 +206,8 @@ void APlayerCharacter::FinishTakedown()
 	CurrentGrabbedAgent->Death(FVector::ZeroVector);
 	CurrentGrabbedAgent = nullptr;
 	IsInTakeDown = false;
+
+	ChangeEnergy(TakedownEnergyIncrease);
 }
 
 void APlayerCharacter::TryMakeNoise()
@@ -226,7 +248,57 @@ void APlayerCharacter::UpdateIsMovingForward(bool _State)
 	IsMovingForward = _State;
 
 	if (IsSprinting == true && IsMovingForward == false)
-		EnableSprint(false);
+		ActivateSprint(false);
+}
+
+void APlayerCharacter::DecreaseEnergy()
+{
+	ChangeEnergy(-EnergyDecreaseSpeed * UGameplayStatics::GetWorldDeltaSeconds(this));
+}
+
+void APlayerCharacter::DecreaseHealth()
+{
+	ChangeHealth(-MaxHealth / HealthDecreaseSteps);
+}
+
+void APlayerCharacter::CheckEnergy()
+{
+	if (CurrentEnergy <= 0 && ShouldDecreaseHealth == false)
+	{
+		ShouldDecreaseHealth = true;
+		HealthDecreaseCurrentTime = HealthDecreaseWaitTime;
+	}
+	
+	if (CurrentEnergy > 0 && ShouldDecreaseHealth == true)
+		ShouldDecreaseHealth = false;
+}
+
+void APlayerCharacter::TryDecreaseHealth()
+{
+	if (ShouldDecreaseHealth == true)
+	{
+		if (HealthDecreaseCurrentTime >= HealthDecreaseWaitTime)
+		{
+			DecreaseHealth();
+			HealthDecreaseCurrentTime = 0;
+		}
+		HealthDecreaseCurrentTime += UGameplayStatics::GetWorldDeltaSeconds(this);
+	}
+}
+
+void APlayerCharacter::Die()
+{
+	IsDead = true;
+
+	CanPerformJump = CanPerformCrouch = CanPerformSprint = CanPerformTakedown = false;
+	
+	SetActorEnableCollision(false);
+
+	HUDReference->ShouldDrawReticle = false;
+	
+	HUDReference->ShowGameOver();
+	ControllerReference->SetShowMouseCursor(true);
+	UWidgetBlueprintLibrary::SetInputMode_UIOnlyEx(ControllerReference, HUDReference->GameOverWidget);
 }
 
 void APlayerCharacter::MoveForward(float _AxisValue)
@@ -280,12 +352,12 @@ void APlayerCharacter::ShootPressed()
 void APlayerCharacter::SprintPressed()
 {
 	if (CanPerformSprint == true && IsMovingForward == true)
-		EnableSprint(true);
+		ActivateSprint(true);
 }
 
 void APlayerCharacter::SprintReleased()
 {
-	EnableSprint(false);
+	ActivateSprint(false);
 }
 
 void APlayerCharacter::CrouchPressed()
@@ -309,6 +381,10 @@ void APlayerCharacter::Tick(float _DeltaTime)
 	
 	TryMakeNoise();
 	UpdateRaycastAndReticle();
+
+	DecreaseEnergy();
+	CheckEnergy();
+	TryDecreaseHealth();
 }
 
 // Called to bind functionality to input
