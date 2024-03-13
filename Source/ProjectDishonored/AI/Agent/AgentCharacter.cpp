@@ -108,30 +108,26 @@ bool AAgentCharacter::CheckPathEnd()
 	return CurrentPathIndex < 0;
 }
 
-void AAgentCharacter::UpdateTakedown(bool _CanTakedown)
+void AAgentCharacter::UpdatePlayerKillStatus(bool _CanTakedown)
 {
 	bool CanActuallyTakedown = _CanTakedown && PlayerReference->GetCanPerformTakedown();
 	PlayerReference->CurrentAgentInRange = CanActuallyTakedown ? this : nullptr;
 	SetTakedownUIVisible(CanActuallyTakedown);
 }
 
-void AAgentCharacter::CheckTakedownDistance()
+void AAgentCharacter::CheckKillDistance()
 {
 	if (PlayerReference == nullptr || PlayerReference->GetIsInTakedown() == true)
 		return;
 
-	bool InsideAngle = FVector::DotProduct(GetActorForwardVector(), GetActorLocation() - PlayerReference->GetActorLocation()) >= UKismetMathLibrary::DegCos(TakedownAngle);
-
 	bool InsideRange = FVector::Distance(GetActorLocation(), PlayerReference->GetActorLocation()) <= TakedownRadius;
 
-	bool InsideHeight = PlayerReference->GetActorLocation().Z - GetActorLocation().Z <= TakedownHeightRange;
+	bool InsideHeight = UKismetMathLibrary::Abs(PlayerReference->GetActorLocation().Z - GetActorLocation().Z) <= TakedownHeightRange;
 
-	if ((InsideAngle && InsideRange && InsideHeight) != CanTakedown)
+	if ((InsideRange && InsideHeight) != CanTakedown)
 	{
-		CanTakedown = InsideAngle && InsideRange && InsideHeight;
-		
-		if (PreventTakedown == false)
-			UpdateTakedown(CanTakedown);
+		CanTakedown = InsideRange && InsideHeight;
+		UpdatePlayerKillStatus(CanTakedown);
 	}
 }
 
@@ -160,7 +156,7 @@ void AAgentCharacter::Tick(float _DeltaTime)
 	Super::Tick(_DeltaTime);
 
 	if (IsDead == false)
-		CheckTakedownDistance();
+		CheckKillDistance();
 }
 
 // Called to bind functionality to input

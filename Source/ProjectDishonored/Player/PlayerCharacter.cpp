@@ -151,36 +151,7 @@ void APlayerCharacter::ChangeEnergy(float _EnergyChange)
 	SetEnergy(CurrentEnergy + _EnergyChange);
 }
 
-void APlayerCharacter::TryGrabAgent()
-{
-	if (CurrentAgentInRange == nullptr)
-		return;
-
-	CurrentGrabbedAgent = CurrentAgentInRange;
-	
-	CurrentGrabbedAgent->EnableCharacter(false);
-	
-	CurrentGrabbedAgent->GetRootComponent()->SetWorldLocation(TakedownRoot->GetComponentLocation());
-	CurrentGrabbedAgent->GetRootComponent()->SetWorldRotation(TakedownRoot->GetComponentRotation());
-
-	FAttachmentTransformRules&& AttachmentRules = FAttachmentTransformRules(EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, true);
-	CurrentGrabbedAgent->AttachToActor(this, AttachmentRules);
-}
-
-void APlayerCharacter::TryReleaseAgent()
-{
-	if (CurrentGrabbedAgent == nullptr)
-		return;
-
-	FDetachmentTransformRules&& DetachmentRules = FDetachmentTransformRules(EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, EDetachmentRule::KeepWorld, true);
-	CurrentGrabbedAgent->DetachFromActor(DetachmentRules);
-
-	FVector NewLocation = FirstPersonCamera->GetForwardVector() * AgentBodyDropOffsetDistance + GetActorLocation();
-	CurrentGrabbedAgent->GetRootComponent()->SetWorldLocation(NewLocation);
-	
-	CurrentGrabbedAgent->EnableCharacter(true);
-}
-
+// DEPRECATED
 void APlayerCharacter::EnableTakedownUI(bool _Enable)
 {
 	HUDReference->SetWidgetVisible(_Enable, HUDReference->TakedownLoadWidget);
@@ -189,25 +160,18 @@ void APlayerCharacter::EnableTakedownUI(bool _Enable)
 void APlayerCharacter::InitiateTakedown()
 {
 	IsInTakeDown = true;
-	
 	EnableAbilities(false);
-	TryGrabAgent();
-	SetSpeed(SlowSpeed);
 
-	TakedownAnimation();
+	CurrentTakedownDirection = (CurrentAgentInRange->GetActorLocation() - GetActorLocation()).GetSafeNormal();
 }
 
 void APlayerCharacter::FinishTakedown()
 {
+	CurrentAgentInRange->Death(FVector::ZeroVector);
+	CurrentAgentInRange = nullptr;
+
 	EnableAbilities(true);
-	TryReleaseAgent();
-	SetSpeed(NormalSpeed);
-
-	CurrentGrabbedAgent->Death(FVector::ZeroVector);
-	CurrentGrabbedAgent = nullptr;
 	IsInTakeDown = false;
-
-	ChangeEnergy(TakedownEnergyIncrease);
 }
 
 void APlayerCharacter::TryMakeNoise()
@@ -385,6 +349,14 @@ void APlayerCharacter::Tick(float _DeltaTime)
 	DecreaseEnergy();
 	CheckEnergy();
 	TryDecreaseHealth();
+
+	if (IsInTakeDown == true)
+	{
+		SetActorLocation(GetActorLocation() + CurrentTakedownDirection * TakedownSpeed * UGameplayStatics::GetWorldDeltaSeconds(this));
+
+		if (FVector::Distance(GetActorLocation(), CurrentAgentInRange->GetActorLocation()) < TakedownAgentOffsetDistance)
+			FinishTakedown();
+	}
 }
 
 // Called to bind functionality to input

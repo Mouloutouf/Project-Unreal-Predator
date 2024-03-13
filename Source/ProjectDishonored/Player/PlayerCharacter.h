@@ -67,12 +67,6 @@ protected:
 	void UpdateEnergyUI();
 	
 	UFUNCTION(BlueprintCallable)
-	void TryGrabAgent();
-
-	UFUNCTION(BlueprintCallable)
-	void TryReleaseAgent();
-	
-	UFUNCTION(BlueprintCallable)
 	void EnableTakedownUI(bool _Enable);
 
 	UFUNCTION(BlueprintCallable)
@@ -239,10 +233,12 @@ protected:
 	FVector CurrentHitPosition;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float AgentBodyDropOffsetDistance;
+	float TakedownAgentOffsetDistance;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float TakedownSpeed;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	AAgentCharacter* CurrentGrabbedAgent;
+	FVector CurrentTakedownDirection;
 
 	UPROPERTY(BlueprintAssignable, BlueprintReadOnly)
 	FOnHealthChangedSignature OnHealthChanged;

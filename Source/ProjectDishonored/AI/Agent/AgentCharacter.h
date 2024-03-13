@@ -42,7 +42,7 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void SetTakedownUIVisible(bool _Visible);
 	UFUNCTION(BlueprintCallable)
-	void CheckTakedownDistance();
+	void CheckKillDistance();
 
 	UFUNCTION(BlueprintCallable)
 	void TryDeathByProjectile(AActor* _Other);
@@ -62,7 +62,7 @@ public:
 	void ChangeCharacterSpeed(float _NewSpeed);
 
 	UFUNCTION(BlueprintCallable)
-	void UpdateTakedown(bool _CanTakedown);
+	void UpdatePlayerKillStatus(bool _CanTakedown);
 	
 	UFUNCTION(BlueprintCallable)
 	void EnableCharacter(bool _Enable);
@@ -106,7 +106,4 @@ public:
 	float TakedownHeightRange = 50;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float TakedownAngle = 60;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	bool PreventTakedown;
 };

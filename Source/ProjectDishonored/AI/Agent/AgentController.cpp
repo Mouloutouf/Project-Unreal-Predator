@@ -98,17 +98,6 @@ void AAgentController::UpdateSuspicion()
 
 	float Speed = SuspicionLevel == 0 ? PatrolSpeed : SuspicionLevel == 1 ? LureSpeed : ChaseSpeed;
 	ControlledAgent->ChangeCharacterSpeed(Speed);
-
-	if (ControlledAgent->GetIsDead() == true)
-		return;
-
-	// TODO Improve this, does not work very well
-	ControlledAgent->PreventTakedown = SuspicionLevel == 2;
-
-	if (ControlledAgent->GetCanTakedown() == false)
-		return;
-
-	ControlledAgent->UpdateTakedown(ControlledAgent->PreventTakedown == false);
 }
 
 bool AAgentController::TryUpdateLurePosition()
