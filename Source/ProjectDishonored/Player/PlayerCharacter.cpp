@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "PlayerCharacter.h"
 
 #include "Blueprint/WidgetBlueprintLibrary.h"
@@ -77,7 +76,7 @@ void APlayerCharacter::EnableAbilities(bool _Enable)
 		StopJumping();
 		ActivateSprint(false);
 	}
-	CanPerformCrouch = CanPerformJump = CanPerformSprint = _Enable;
+	CanLook = CanMove = CanPerformCrouch = CanPerformJump = CanPerformSprint = _Enable;
 }
 
 void APlayerCharacter::EnableSprint(bool _Enable)
@@ -159,19 +158,35 @@ void APlayerCharacter::EnableTakedownUI(bool _Enable)
 
 void APlayerCharacter::InitiateTakedown()
 {
-	IsInTakeDown = true;
+	IsInTakedown = PerformTakedownMove = true;
 	EnableAbilities(false);
 
-	CurrentTakedownDirection = (CurrentAgentInRange->GetActorLocation() - GetActorLocation()).GetSafeNormal();
+	CurrentTakedownDirection = (CurrentAgentInKillRange->GetActorLocation() - GetActorLocation()).GetSafeNormal();
+}
+
+void APlayerCharacter::TakedownKill()
+{
+	PerformTakedownMove = false;
+	CurrentAgentInKillRange->Death(FVector::ZeroVector);
+	
+	if (CurrentAgentInKillRange->IsPlayerDetected == true)
+	{
+		float KillAnimRate = CurrentAgentInKillRange->CurrentSuspicionLevel == 2 ? DetectedKillSlowAnimationRate : DetectedKillNormalAnimationRate;
+		KillAnimation(KillAnimRate);
+	}
+	else
+		FinishTakedown();
 }
 
 void APlayerCharacter::FinishTakedown()
 {
-	CurrentAgentInRange->Death(FVector::ZeroVector);
-	CurrentAgentInRange = nullptr;
+	if (CurrentAgentInKillRange->CurrentSuspicionLevel == 2)
+		ChangeHealth(-TakedownDetectedHealthDecrease);
 
+	IsInTakedown = false;
 	EnableAbilities(true);
-	IsInTakeDown = false;
+
+	CurrentAgentInKillRange = nullptr;
 }
 
 void APlayerCharacter::TryMakeNoise()
@@ -267,6 +282,9 @@ void APlayerCharacter::Die()
 
 void APlayerCharacter::MoveForward(float _AxisValue)
 {
+	if (CanMove == false)
+		return;
+	
 	AddMovementInput(GetActorForwardVector(), _AxisValue);
 
 	UpdateIsMovingForward(_AxisValue > 0.0f);
@@ -274,26 +292,41 @@ void APlayerCharacter::MoveForward(float _AxisValue)
 
 void APlayerCharacter::MoveRight(float _AxisValue)
 {
+	if (CanMove == false)
+		return;
+	
 	AddMovementInput(GetActorRightVector(), _AxisValue);
 }
 
 void APlayerCharacter::TurnRate(float _AxisValue)
 {
+	if (CanLook == false)
+		return;
+	
 	AddControllerYawInput(_AxisValue * ControllerXSensitivity * UGameplayStatics::GetWorldDeltaSeconds(this));
 }
 
 void APlayerCharacter::LookUpRate(float _AxisValue)
 {
+	if (CanLook == false)
+		return;
+	
 	AddControllerPitchInput(_AxisValue * ControllerYSensitivity * UGameplayStatics::GetWorldDeltaSeconds(this));
 }
 
 void APlayerCharacter::Turn(float _AxisValue)
 {
+	if (CanLook == false)
+		return;
+	
 	AddControllerYawInput(_AxisValue);
 }
 
 void APlayerCharacter::LookUp(float _AxisValue)
 {
+	if (CanLook == false)
+		return;
+	
 	AddControllerPitchInput(_AxisValue);
 }
 
@@ -332,7 +365,7 @@ void APlayerCharacter::CrouchPressed()
 
 void APlayerCharacter::TakedownPressed()
 {
-	if (UKismetSystemLibrary::IsValid(CurrentAgentInRange) == false || IsInTakeDown == true)
+	if (UKismetSystemLibrary::IsValid(CurrentAgentInKillRange) == false || IsInTakedown == true)
 		return;
 
 	InitiateTakedown();
@@ -350,12 +383,12 @@ void APlayerCharacter::Tick(float _DeltaTime)
 	CheckEnergy();
 	TryDecreaseHealth();
 
-	if (IsInTakeDown == true)
+	if (PerformTakedownMove == true)
 	{
-		SetActorLocation(GetActorLocation() + CurrentTakedownDirection * TakedownSpeed * UGameplayStatics::GetWorldDeltaSeconds(this));
+		SetActorLocation(GetActorLocation() + CurrentTakedownDirection * TakedownMoveSpeed * UGameplayStatics::GetWorldDeltaSeconds(this));
 
-		if (FVector::Distance(GetActorLocation(), CurrentAgentInRange->GetActorLocation()) < TakedownAgentOffsetDistance)
-			FinishTakedown();
+		if (FVector::Distance(GetActorLocation(), CurrentAgentInKillRange->GetActorLocation()) < TakedownAgentOffsetDistance)
+			TakedownKill();
 	}
 }
 

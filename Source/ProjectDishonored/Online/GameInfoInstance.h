@@ -3,20 +3,20 @@
 #pragma once
 
 #include "CoreMinimal.h"
-// #include "JoinSessionCallbackProxy.h"
 #include "Engine/GameInstance.h"
 #include "GameInfoInstance.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class PROJECTDISHONORED_API UGameInfoInstance : public UGameInstance
 {
 	GENERATED_BODY()
 
-private:
+protected:
 	UGameInfoInstance();
+
+	virtual void Init() override;
+	virtual void Shutdown() override;
+	virtual void StartGameInstance() override;
 	
 public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)

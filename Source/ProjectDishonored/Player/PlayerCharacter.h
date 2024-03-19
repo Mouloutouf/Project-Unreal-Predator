@@ -73,10 +73,13 @@ protected:
 	void InitiateTakedown();
 
 	UFUNCTION(BlueprintCallable)
+	void TakedownKill();
+	
+	UFUNCTION(BlueprintCallable)
 	void FinishTakedown();
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
-	void TakedownAnimation();
+	void KillAnimation(float _Rate);
 	
 	UFUNCTION(BlueprintCallable)
 	void TryMakeNoise();
@@ -126,22 +129,6 @@ private:
 
 	void TakedownPressed();
 	
-public:	
-	// Called every frame
-	virtual void Tick(float _DeltaTime) override;
-
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(UInputComponent* _PlayerInputComponent) override;
-
-	bool GetIsCrouching() const { return IsCrouching; }
-	bool GetIsSprinting() const { return IsSprinting; }
-	bool GetIsInTakedown() const { return IsInTakeDown; }
-	bool GetIsMovingForward() const { return IsMovingForward; }
-	
-	bool GetCanPerformTakedown() const { return CanPerformTakedown; }
-
-	bool GetIsDead() const { return IsDead; }
-	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	UCameraComponent* FirstPersonCamera;
@@ -152,6 +139,10 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	USceneComponent* TakedownRoot;
 	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool CanMove = true;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool CanLook = true;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool CanPerformJump = true;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
@@ -167,7 +158,9 @@ protected:
 	bool IsSprinting;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	bool IsInTakeDown;
+	bool PerformTakedownMove;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool IsInTakedown;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool IsMovingForward;
@@ -213,6 +206,8 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float TakedownEnergyIncrease;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float TakedownDetectedHealthDecrease;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	float ControllerXSensitivity;
@@ -233,9 +228,9 @@ protected:
 	FVector CurrentHitPosition;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float TakedownAgentOffsetDistance;
+	float TakedownAgentOffsetDistance = 100;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float TakedownSpeed;
+	float TakedownMoveSpeed = 2500;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	FVector CurrentTakedownDirection;
@@ -247,6 +242,35 @@ protected:
 	FOnEnergyChangedSignature OnEnergyChanged;
 	
 public:
+	// Called every frame
+	virtual void Tick(float _DeltaTime) override;
+
+	// Called to bind functionality to input
+	virtual void SetupPlayerInputComponent(UInputComponent* _PlayerInputComponent) override;
+
+	bool GetIsCrouching() const { return IsCrouching; }
+	bool GetIsSprinting() const { return IsSprinting; }
+	bool GetIsInTakedown() const { return PerformTakedownMove; }
+	bool GetIsMovingForward() const { return IsMovingForward; }
+	
+	bool GetCanPerformTakedown() const { return CanPerformTakedown; }
+
+	bool GetIsDead() const { return IsDead; }
+
+	//
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	AAgentCharacter* CurrentAgentInRange;
+	AAgentCharacter* CurrentAgentInKillRange;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float UndetectedKillRadius = 200;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float DetectedKillRadius = 400;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float KillHeightRange = 80;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float DetectedKillNormalAnimationRate = 0.5;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float DetectedKillSlowAnimationRate = 0.3;
 };

@@ -108,26 +108,27 @@ bool AAgentCharacter::CheckPathEnd()
 	return CurrentPathIndex < 0;
 }
 
-void AAgentCharacter::UpdatePlayerKillStatus(bool _CanTakedown)
+void AAgentCharacter::UpdatePlayerCanTakedown(bool _CanTakedown)
 {
-	bool CanActuallyTakedown = _CanTakedown && PlayerReference->GetCanPerformTakedown();
-	PlayerReference->CurrentAgentInRange = CanActuallyTakedown ? this : nullptr;
-	SetTakedownUIVisible(CanActuallyTakedown);
+	bool CanPerformTakedown = _CanTakedown && PlayerReference->GetCanPerformTakedown();
+	PlayerReference->CurrentAgentInKillRange = CanPerformTakedown ? this : nullptr;
+	SetTakedownUIVisible(CanPerformTakedown);
 }
 
-void AAgentCharacter::CheckKillDistance()
+void AAgentCharacter::CheckPlayerCanTakedown()
 {
 	if (PlayerReference == nullptr || PlayerReference->GetIsInTakedown() == true)
 		return;
 
-	bool InsideRange = FVector::Distance(GetActorLocation(), PlayerReference->GetActorLocation()) <= TakedownRadius;
+	float KillRadius = ControllerReference->GetPlayerDetected() == true ? PlayerReference->DetectedKillRadius : PlayerReference->UndetectedKillRadius;
+	bool InsideRange = FVector::Distance(GetActorLocation(), PlayerReference->GetActorLocation()) <= KillRadius;
 
-	bool InsideHeight = UKismetMathLibrary::Abs(PlayerReference->GetActorLocation().Z - GetActorLocation().Z) <= TakedownHeightRange;
+	bool InsideHeight = UKismetMathLibrary::Abs(PlayerReference->GetActorLocation().Z - GetActorLocation().Z) <= PlayerReference->KillHeightRange;
 
-	if ((InsideRange && InsideHeight) != CanTakedown)
+	if ((InsideRange && InsideHeight) != CanPlayerTakedown)
 	{
-		CanTakedown = InsideRange && InsideHeight;
-		UpdatePlayerKillStatus(CanTakedown);
+		CanPlayerTakedown = InsideRange && InsideHeight;
+		UpdatePlayerCanTakedown(CanPlayerTakedown);
 	}
 }
 
@@ -156,7 +157,7 @@ void AAgentCharacter::Tick(float _DeltaTime)
 	Super::Tick(_DeltaTime);
 
 	if (IsDead == false)
-		CheckKillDistance();
+		CheckPlayerCanTakedown();
 }
 
 // Called to bind functionality to input

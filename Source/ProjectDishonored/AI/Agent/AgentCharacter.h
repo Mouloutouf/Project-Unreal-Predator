@@ -42,35 +42,13 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void SetTakedownUIVisible(bool _Visible);
 	UFUNCTION(BlueprintCallable)
-	void CheckKillDistance();
+	void CheckPlayerCanTakedown();
 
 	UFUNCTION(BlueprintCallable)
 	void TryDeathByProjectile(AActor* _Other);
 	
-public:	
-	// Called every frame
-	virtual void Tick(float _DeltaTime) override;
-
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(UInputComponent* _PlayerInputComponent) override;
-
-	bool GetIsDead() const { return IsDead; }
-	bool GetCanTakedown() const { return CanTakedown; }
-	APlayerCharacter* GetPlayer() const { return PlayerReference; }
-
-	UFUNCTION(BlueprintCallable)
-	void ChangeCharacterSpeed(float _NewSpeed);
-
-	UFUNCTION(BlueprintCallable)
-	void UpdatePlayerKillStatus(bool _CanTakedown);
+	//
 	
-	UFUNCTION(BlueprintCallable)
-	void EnableCharacter(bool _Enable);
-
-	UFUNCTION(BlueprintCallable)
-	void Death(FVector _HitDirection);
-	
-protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	bool IsDead;
 
@@ -91,19 +69,38 @@ protected:
 	bool AtDestination;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	bool CanTakedown;
+	bool CanPlayerTakedown;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float HitForce = 10000;
 	
 public:
+	// Called every frame
+	virtual void Tick(float _DeltaTime) override;
+
+	// Called to bind functionality to input
+	virtual void SetupPlayerInputComponent(UInputComponent* _PlayerInputComponent) override;
+
+	bool GetIsDead() const { return IsDead; }
+	APlayerCharacter* GetPlayer() const { return PlayerReference; }
+
+	UFUNCTION(BlueprintCallable)
+	void ChangeCharacterSpeed(float _NewSpeed);
+
+	UFUNCTION(BlueprintCallable)
+	void UpdatePlayerCanTakedown(bool _CanTakedown);
+	
+	UFUNCTION(BlueprintCallable)
+	void EnableCharacter(bool _Enable);
+
+	UFUNCTION(BlueprintCallable)
+	void Death(FVector _HitDirection);
+
+	//
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	APath* Path;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float TakedownRadius = 150;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float TakedownHeightRange = 50;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float TakedownAngle = 60;
+	bool IsPlayerDetected;
+	int CurrentSuspicionLevel;
 };

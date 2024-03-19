@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "AgentController.h"
 
 #include "BehaviorTree/BlackboardComponent.h"
@@ -86,7 +85,7 @@ bool AAgentController::TryChangeSuspicion(int _Value)
 	if (_Value <= 0 || _Value >= 2)
 		return false;
 
-	SuspicionLevel = _Value;
+	ControlledAgent->CurrentSuspicionLevel = SuspicionLevel = _Value;
 	UpdateSuspicion();
 	
 	return true;
@@ -210,7 +209,7 @@ void AAgentController::UpdatePerception(AActor* _Actor, FAIStimulus _Stimulus)
 	APlayerCharacter* Player = dynamic_cast<APlayerCharacter*>(_Actor);
 	if (Player != nullptr && Player->GetIsDead() == false)
 	{
-		PlayerDetected = _Stimulus.WasSuccessfullySensed();
+		ControlledAgent->IsPlayerDetected = PlayerDetected = _Stimulus.WasSuccessfullySensed();
 		if (PlayerDetected == true)
 			SetDetectionVisibility(true);
 	}
@@ -259,7 +258,7 @@ void AAgentController::Tick(float _DeltaTime)
 
 void AAgentController::Initialize()
 {
-	SuspicionLevel = 0;
+	ControlledAgent->CurrentSuspicionLevel = SuspicionLevel = 0;
 	UpdateSuspicion();
 
 	SetTimelinePlayRate(1 / MinSuspicionIncreaseRate);

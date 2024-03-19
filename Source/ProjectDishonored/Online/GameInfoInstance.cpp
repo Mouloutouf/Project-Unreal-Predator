@@ -1,15 +1,27 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "GameInfoInstance.h"
-
-#include "Net/UnrealNetwork.h"
 
 // #include "CreateSessionCallbackProxy.h"
 // #include "Kismet/GameplayStatics.h"
 
 UGameInfoInstance::UGameInfoInstance()
 {
+}
+
+void UGameInfoInstance::Init()
+{
+	Super::Init();
+}
+
+void UGameInfoInstance::Shutdown()
+{
+	Super::Shutdown();
+}
+
+void UGameInfoInstance::StartGameInstance()
+{
+	Super::StartGameInstance();
 }
 
 // void UObject::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -57,4 +69,3 @@ UGameInfoInstance::UGameInfoInstance()
 // void UGameInfoInstance::DisplayErrorMessage(FString _ErrorMessage)
 // {
 // }
-

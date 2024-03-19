@@ -8,9 +8,6 @@
 #include "Perception/AIPerceptionTypes.h"
 #include "AgentController.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class PROJECTDISHONORED_API AAgentController : public AAIController
 {
@@ -88,24 +85,12 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void OnDetectionTimelineFinished();
 	
-public:
-	// Called every frame
-	virtual void Tick(float _DeltaTime) override;
-	
-	void Initialize();
+	//
 
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
-	void RunBehavior();
-
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
-	void SetDetectionVisibility(bool _Visibility);
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
-	void SetDetectionProgress(float _Progress);
-	
-protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	AAgentCharacter* ControlledAgent;
 
+	// TODO Make the Suspicion Level an Enum
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	int SuspicionLevel;
 
@@ -158,4 +143,22 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	TSet<FString> DeadAgentsCache;
+
+public:
+	// Called every frame
+	virtual void Tick(float _DeltaTime) override;
+	
+	void Initialize();
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void RunBehavior();
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void SetDetectionVisibility(bool _Visibility);
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void SetDetectionProgress(float _Progress);
+
+	// TODO Create an Agent Data class to store data that should be known by both the Agent Controller and Agent Character, and to which both of them can write
+	bool GetPlayerDetected() const { return PlayerDetected; }
+	int GetSuspicionLevel() const { return SuspicionLevel; }
 };

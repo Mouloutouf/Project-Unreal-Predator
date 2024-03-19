@@ -6,9 +6,6 @@
 #include "GameFramework/HUD.h"
 #include "PlayerHUD.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class PROJECTDISHONORED_API APlayerHUD : public AHUD
 {
