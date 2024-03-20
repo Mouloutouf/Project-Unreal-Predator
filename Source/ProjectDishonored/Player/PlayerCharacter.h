@@ -250,13 +250,16 @@ public:
 
 	bool GetIsCrouching() const { return IsCrouching; }
 	bool GetIsSprinting() const { return IsSprinting; }
-	bool GetIsInTakedown() const { return PerformTakedownMove; }
+	bool GetIsInTakedown() const { return IsInTakedown; }
 	bool GetIsMovingForward() const { return IsMovingForward; }
 	
 	bool GetCanPerformTakedown() const { return CanPerformTakedown; }
 
 	bool GetIsDead() const { return IsDead; }
 
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void SetTakedownWidgetVisible(bool _Visible);
+	
 	//
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)

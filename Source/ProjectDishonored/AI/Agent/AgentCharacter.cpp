@@ -112,7 +112,7 @@ void AAgentCharacter::UpdatePlayerCanTakedown(bool _CanTakedown)
 {
 	bool CanPerformTakedown = _CanTakedown && PlayerReference->GetCanPerformTakedown();
 	PlayerReference->CurrentAgentInKillRange = CanPerformTakedown ? this : nullptr;
-	SetTakedownUIVisible(CanPerformTakedown);
+	PlayerReference->SetTakedownWidgetVisible(CanPerformTakedown);
 }
 
 void AAgentCharacter::CheckPlayerCanTakedown()
@@ -188,7 +188,8 @@ void AAgentCharacter::Death(FVector _HitDirection)
 	// TODO Make this bone name a variable you have to fill in as a user
 	Mesh->AddImpulse(_HitDirection, "head");
 
-	SetTakedownUIVisible(false);
+	if (PlayerReference != nullptr)
+		PlayerReference->SetTakedownWidgetVisible(false);
 
 	ControllerReference->SetDetectionVisibility(false);
 	// TODO Find a solution to make the name available for editing by the user

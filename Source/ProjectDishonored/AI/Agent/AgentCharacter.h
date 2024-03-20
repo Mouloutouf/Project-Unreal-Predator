@@ -39,8 +39,6 @@ protected:
 	UFUNCTION(BlueprintPure, BlueprintCallable)
 	bool CheckPathEnd();
 
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
-	void SetTakedownUIVisible(bool _Visible);
 	UFUNCTION(BlueprintCallable)
 	void CheckPlayerCanTakedown();
 

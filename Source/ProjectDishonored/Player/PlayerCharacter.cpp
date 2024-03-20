@@ -5,6 +5,7 @@
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Perception/AISense_Hearing.h"
 #include "ProjectDishonored/AI/Agent/AgentCharacter.h"
@@ -72,7 +73,6 @@ void APlayerCharacter::EnableAbilities(bool _Enable)
 
 	if (_Enable == false)
 	{
-		ActivateCrouch(false, false);
 		StopJumping();
 		ActivateSprint(false);
 	}
@@ -159,15 +159,20 @@ void APlayerCharacter::EnableTakedownUI(bool _Enable)
 void APlayerCharacter::InitiateTakedown()
 {
 	IsInTakedown = PerformTakedownMove = true;
+	
 	EnableAbilities(false);
 
 	CurrentTakedownDirection = (CurrentAgentInKillRange->GetActorLocation() - GetActorLocation()).GetSafeNormal();
+	
+	FRotator TakedownCameraRotation = UKismetMathLibrary::FindLookAtRotation(FirstPersonCamera->GetComponentLocation(), CurrentAgentInKillRange->GetActorLocation());
+	ControllerReference->SetControlRotation(TakedownCameraRotation);
 }
 
 void APlayerCharacter::TakedownKill()
 {
 	PerformTakedownMove = false;
-	CurrentAgentInKillRange->Death(FVector::ZeroVector);
+
+	SetTakedownWidgetVisible(false);
 	
 	if (CurrentAgentInKillRange->IsPlayerDetected == true)
 	{
@@ -180,6 +185,8 @@ void APlayerCharacter::TakedownKill()
 
 void APlayerCharacter::FinishTakedown()
 {
+	CurrentAgentInKillRange->Death(FVector::ZeroVector);
+	
 	if (CurrentAgentInKillRange->CurrentSuspicionLevel == 2)
 		ChangeHealth(-TakedownDetectedHealthDecrease);
 
