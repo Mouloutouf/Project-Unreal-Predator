@@ -43,6 +43,9 @@ protected:
 	void CheckPlayerCanTakedown();
 
 	UFUNCTION(BlueprintCallable)
+	void CheckPlayerCanConsume();
+
+	UFUNCTION(BlueprintCallable)
 	void TryDeathByProjectile(AActor* _Other);
 	
 	//
@@ -69,6 +72,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	bool CanPlayerTakedown;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	bool CanPlayerConsume;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float HitForce = 10000;
 	
@@ -87,6 +93,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void UpdatePlayerCanTakedown(bool _CanTakedown);
+
+	UFUNCTION(BlueprintCallable)
+	void UpdatePlayerCanConsume(bool _CanConsume);
 	
 	UFUNCTION(BlueprintCallable)
 	void EnableCharacter(bool _Enable);

@@ -44,7 +44,10 @@ public:
 	UUserWidget* TakedownKeyWidget;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	UUserWidget* TakedownLoadWidget;
+	UUserWidget* ConsumeKeyWidget;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	UUserWidget* LoadingAnimationWidget;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	UUserWidget* AmmoWidget;

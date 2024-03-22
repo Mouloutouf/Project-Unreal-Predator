@@ -67,7 +67,7 @@ protected:
 	void UpdateEnergyUI();
 	
 	UFUNCTION(BlueprintCallable)
-	void EnableTakedownUI(bool _Enable);
+	void EnableLoadingAnimation(bool _Enable);
 
 	UFUNCTION(BlueprintCallable)
 	void InitiateTakedown();
@@ -80,6 +80,15 @@ protected:
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void KillAnimation(float _Rate);
+
+	UFUNCTION(BlueprintCallable)
+	void InitiateConsumeBody();
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void ConsumeAnimation(float _Rate);
+
+	UFUNCTION(BlueprintCallable)
+	void FinishConsumeBody();
 	
 	UFUNCTION(BlueprintCallable)
 	void TryMakeNoise();
@@ -128,6 +137,8 @@ private:
 	void CrouchPressed();
 
 	void TakedownPressed();
+
+	void EatPressed();
 	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
@@ -163,6 +174,9 @@ protected:
 	bool IsInTakedown;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool IsEating;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool IsMovingForward;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
@@ -195,6 +209,9 @@ protected:
 	float HealthDecreaseCurrentTime;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool ShouldDecreaseHealth;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float TakedownDetectedHealthDecrease;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float MaxEnergy;
@@ -205,9 +222,7 @@ protected:
 	float EnergyDecreaseSpeed = 1;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float TakedownEnergyIncrease;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float TakedownDetectedHealthDecrease;
+	float ConsumeEnergyIncrease;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	float ControllerXSensitivity;
@@ -251,6 +266,7 @@ public:
 	bool GetIsCrouching() const { return IsCrouching; }
 	bool GetIsSprinting() const { return IsSprinting; }
 	bool GetIsInTakedown() const { return IsInTakedown; }
+	bool GetIsEating() const { return IsEating; }
 	bool GetIsMovingForward() const { return IsMovingForward; }
 	
 	bool GetCanPerformTakedown() const { return CanPerformTakedown; }
@@ -259,11 +275,17 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void SetTakedownWidgetVisible(bool _Visible);
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void SetConsumeWidgetVisible(bool _Visible);
 	
 	//
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	AAgentCharacter* CurrentAgentInKillRange;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	AAgentCharacter* CurrentDeadAgentInRange;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float UndetectedKillRadius = 200;
@@ -273,7 +295,15 @@ public:
 	float KillHeightRange = 80;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float ConsumeRadius = 150;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float ConsumeHeightRange = 80;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float DetectedKillNormalAnimationRate = 0.5;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float DetectedKillSlowAnimationRate = 0.3;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float ConsumeAnimationRate = 0.5;
 };

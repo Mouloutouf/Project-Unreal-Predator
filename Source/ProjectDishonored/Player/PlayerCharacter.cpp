@@ -150,16 +150,14 @@ void APlayerCharacter::ChangeEnergy(float _EnergyChange)
 	SetEnergy(CurrentEnergy + _EnergyChange);
 }
 
-// DEPRECATED
-void APlayerCharacter::EnableTakedownUI(bool _Enable)
+void APlayerCharacter::EnableLoadingAnimation(bool _Enable)
 {
-	HUDReference->SetWidgetVisible(_Enable, HUDReference->TakedownLoadWidget);
+	HUDReference->SetWidgetVisible(_Enable, HUDReference->LoadingAnimationWidget);
 }
 
 void APlayerCharacter::InitiateTakedown()
 {
 	IsInTakedown = PerformTakedownMove = true;
-	
 	EnableAbilities(false);
 
 	CurrentTakedownDirection = (CurrentAgentInKillRange->GetActorLocation() - GetActorLocation()).GetSafeNormal();
@@ -194,6 +192,28 @@ void APlayerCharacter::FinishTakedown()
 	EnableAbilities(true);
 
 	CurrentAgentInKillRange = nullptr;
+}
+
+void APlayerCharacter::InitiateConsumeBody()
+{
+	IsEating = true;
+	EnableAbilities(false);
+
+	SetConsumeWidgetVisible(false);
+
+	ConsumeAnimation(ConsumeAnimationRate);
+}
+
+void APlayerCharacter::FinishConsumeBody()
+{
+	CurrentDeadAgentInRange->Destroy();
+
+	ChangeEnergy(ConsumeEnergyIncrease);
+	
+	IsEating = false;
+	EnableAbilities(true);
+
+	CurrentDeadAgentInRange = nullptr;
 }
 
 void APlayerCharacter::TryMakeNoise()
@@ -378,6 +398,14 @@ void APlayerCharacter::TakedownPressed()
 	InitiateTakedown();
 }
 
+void APlayerCharacter::EatPressed()
+{
+	if (UKismetSystemLibrary::IsValid(CurrentDeadAgentInRange) == false || IsEating == true)
+		return;
+
+	InitiateConsumeBody();
+}
+
 // Called every frame
 void APlayerCharacter::Tick(float _DeltaTime)
 {
@@ -424,5 +452,6 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* _PlayerInputCo
 	_PlayerInputComponent->BindAction(TEXT("Crouch"), IE_Pressed, this, &APlayerCharacter::CrouchPressed);
 
 	_PlayerInputComponent->BindAction(TEXT("Kill"), IE_Pressed, this, &APlayerCharacter::TakedownPressed);
+	_PlayerInputComponent->BindAction(TEXT("Eat"), IE_Pressed, this, &APlayerCharacter::EatPressed);
 }
 

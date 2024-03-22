@@ -108,6 +108,7 @@ bool AAgentCharacter::CheckPathEnd()
 	return CurrentPathIndex < 0;
 }
 
+// TODO Should make sure it is always the closest agent to the player that is selected, if there are multiple ones, so they don't overwrite each other constantly
 void AAgentCharacter::UpdatePlayerCanTakedown(bool _CanTakedown)
 {
 	bool CanPerformTakedown = _CanTakedown && PlayerReference->GetCanPerformTakedown();
@@ -129,6 +130,30 @@ void AAgentCharacter::CheckPlayerCanTakedown()
 	{
 		CanPlayerTakedown = InsideRange && InsideHeight;
 		UpdatePlayerCanTakedown(CanPlayerTakedown);
+	}
+}
+
+// TODO Should create some sort of generic interaction component which allows an object to expose an interaction to the player
+void AAgentCharacter::UpdatePlayerCanConsume(bool _CanConsume)
+{
+	PlayerReference->CurrentDeadAgentInRange = _CanConsume ? this : nullptr;
+	PlayerReference->SetConsumeWidgetVisible(_CanConsume);
+}
+
+// TODO Add a check for if the player is actually looking in the direction of the body
+void AAgentCharacter::CheckPlayerCanConsume()
+{
+	if (PlayerReference == nullptr || PlayerReference->GetIsEating() == true)
+		return;
+
+	bool InsideRange = FVector::Distance(Mesh->GetBoneLocation("pelvis"), PlayerReference->GetActorLocation()) <= PlayerReference->ConsumeRadius;
+
+	bool InsideHeight = UKismetMathLibrary::Abs(PlayerReference->GetActorLocation().Z - Mesh->GetBoneLocation("pelvis").Z) <= PlayerReference->ConsumeHeightRange;
+
+	if ((InsideRange && InsideHeight) != CanPlayerConsume)
+	{
+		CanPlayerConsume = InsideRange && InsideHeight;
+		UpdatePlayerCanConsume(CanPlayerConsume);
 	}
 }
 
@@ -158,6 +183,8 @@ void AAgentCharacter::Tick(float _DeltaTime)
 
 	if (IsDead == false)
 		CheckPlayerCanTakedown();
+	else
+		CheckPlayerCanConsume();
 }
 
 // Called to bind functionality to input
