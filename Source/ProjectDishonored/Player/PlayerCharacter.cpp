@@ -3,7 +3,6 @@
 #include "PlayerCharacter.h"
 
 #include "Blueprint/WidgetBlueprintLibrary.h"
-#include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -12,6 +11,9 @@
 
 #define HIT_COLLISION_CHANNEL ECC_GameTraceChannel1
 #define PROJECTILE_COLLISION_CHANNEL ECC_GameTraceChannel2
+
+// SAVED DEBUG LOG LINE
+//GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::White, FString::Printf(TEXT("YOUR DEBUG TEXT %f"), YourVariable));
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -102,7 +104,6 @@ void APlayerCharacter::SetCrouch(float _VignetteIntensity, float _NewHeight)
 	FirstPersonCamera->SetRelativeLocation(CameraLocation);
 
 	FirstPersonCamera->PostProcessSettings.VignetteIntensity = _VignetteIntensity;
-	GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::White, FString::Printf(TEXT("SET VIGNETTE TO %f"), _VignetteIntensity));
 }
 
 void APlayerCharacter::ActivateCrouch(bool _Activate, bool _ShouldAnimate)
@@ -259,6 +260,9 @@ void APlayerCharacter::UpdateIsMovingForward(bool _State)
 
 void APlayerCharacter::DecreaseEnergy()
 {
+	float EnergyDecreaseSpeed = GetIsMoving() == true ? EnergyMovementDecreaseSpeed : EnergyImmobileDecreaseSpeed;
+	EnergyDecreaseSpeed *= IsSprinting == true ? EnergySprintDecreaseFactor : 1;
+	
 	ChangeEnergy(-EnergyDecreaseSpeed * UGameplayStatics::GetWorldDeltaSeconds(this));
 }
 

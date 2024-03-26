@@ -6,6 +6,7 @@
 #include "Crossbow.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "ProjectDishonored/UI/PlayerHUD.h"
 #include "PlayerCharacter.generated.h"
 
@@ -219,7 +220,11 @@ protected:
 	float CurrentEnergy;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float EnergyDecreaseSpeed = 1;
+	float EnergyImmobileDecreaseSpeed = 0.27;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float EnergyMovementDecreaseSpeed = 1.67;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float EnergySprintDecreaseFactor = 10;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float ConsumeEnergyIncrease;
@@ -268,6 +273,8 @@ public:
 	bool GetIsInTakedown() const { return IsInTakedown; }
 	bool GetIsEating() const { return IsEating; }
 	bool GetIsMovingForward() const { return IsMovingForward; }
+
+	bool GetIsMoving() const { return CharacterMovement->Velocity.Size() > 0; }
 	
 	bool GetCanPerformTakedown() const { return CanPerformTakedown; }
 
