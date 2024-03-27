@@ -20,6 +20,7 @@ void AAgentController::BeginPlay()
 	CurrentDetectionRate =  BaseDetectionRate;
 }
 
+// TODO Review this method
 float AAgentController::AngleBetweenVectors(FVector _FirstVector, FVector _SecondVector)
 {
 	_FirstVector = _FirstVector.GetSafeNormal();
@@ -45,7 +46,7 @@ void AAgentController::UpdateDetectionMeterAngle()
 		return;
 	
 	FVector AgentPositionFromPlayer = ControlledAgent->GetActorLocation() - ControlledAgent->GetPlayer()->GetActorLocation();
-	FVector PlayerDirection = ControlledAgent->GetPlayer()->GetActorForwardVector();
+	FVector PlayerDirection = ControlledAgent->GetPlayer()->GetCameraForward();
 	
 	float Angle = -AngleBetweenVectors(AgentPositionFromPlayer, PlayerDirection);
 	DetectionMeterWidget->SetRenderTransformAngle(Angle);
@@ -167,7 +168,7 @@ void AAgentController::DecreaseTimeline()
 bool AAgentController::TryUpdateDetectionRate()
 {
 	int PlayerSprintState = ControlledAgent->GetPlayer()->GetIsSprinting() ? 1 : 0;
-	int PlayerCrouchState = ControlledAgent->GetPlayer()->GetIsCrouching() ? -1 : 0;
+	int PlayerCrouchState = ControlledAgent->GetPlayer()->GetIsInProne() ? -1 : 0;
 
 	int NewPlayerState = PlayerSprintState + PlayerCrouchState;
 	

@@ -7,6 +7,7 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "ProjectDishonored/UI/PlayerHUD.h"
 #include "PlayerCharacter.generated.h"
 
@@ -264,16 +265,20 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(UInputComponent* _PlayerInputComponent) override;
 
-	bool GetIsCrouching() const { return IsInProne; }
+	bool GetIsInProne() const { return IsInProne; }
+	
 	bool GetIsSprinting() const { return IsSprinting; }
+	
 	bool GetIsInTakedown() const { return IsInTakedown; }
+	bool GetCanPerformTakedown() const { return CanPerformTakedown; }
+	
 	bool GetIsEating() const { return IsEating; }
-	bool GetIsMovingForward() const { return IsMovingForward; }
 
+	FVector GetCameraForward() const { return UKismetMathLibrary::GetForwardVector(FRotator(0, GetControlRotation().Yaw, 0)); }
+	
+	bool GetIsMovingForward() const { return IsMovingForward; }
 	bool GetIsMoving() const { return CharacterMovement->Velocity.Size() > 0; }
 	
-	bool GetCanPerformTakedown() const { return CanPerformTakedown; }
-
 	bool GetIsDead() const { return IsDead; }
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)

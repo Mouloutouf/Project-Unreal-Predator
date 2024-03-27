@@ -310,9 +310,7 @@ void APlayerCharacter::MoveForward(float _AxisValue)
 	if (CanMove == false)
 		return;
 	
-	FRotator CameraZRotation = FRotator(0, GetControlRotation().Yaw, 0);
-	FVector CameraForwardVector = UKismetMathLibrary::GetForwardVector(CameraZRotation);
-	AddMovementInput(CameraForwardVector, _AxisValue);
+	AddMovementInput(GetCameraForward(), _AxisValue);
 
 	UpdateIsMovingForward(_AxisValue > 0.0f);
 }
@@ -322,9 +320,8 @@ void APlayerCharacter::MoveRight(float _AxisValue)
 	if (CanMove == false)
 		return;
 	
-	FRotator CameraZRotation = FRotator(0, GetControlRotation().Yaw, 0);
-	FVector CameraRightVector = UKismetMathLibrary::GetRightVector(CameraZRotation);
-	AddMovementInput(CameraRightVector, _AxisValue);
+	FVector CameraRight = FVector::CrossProduct(GetActorUpVector(), GetCameraForward());
+	AddMovementInput(CameraRight, _AxisValue);
 }
 
 void APlayerCharacter::TurnRate(float _AxisValue)
