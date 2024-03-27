@@ -3,10 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Crossbow.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "ProjectDishonored/UI/PlayerHUD.h"
 #include "PlayerCharacter.generated.h"
 
@@ -38,10 +38,10 @@ protected:
 	void ActivateSprint(bool _Activate);
 	
 	UFUNCTION(BlueprintCallable)
-	void SetCrouch(float _VignetteIntensity, float _NewHeight);
+	void SetProne(float _VignetteIntensity, float _NewHeight);
 
 	UFUNCTION(BlueprintCallable)
-	void ActivateCrouch(bool _Activate, bool _ShouldAnimate);
+	void ActivateProne(bool _Activate, bool _ShouldAnimate);
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void CrouchAnimation(bool _Activate);
@@ -130,12 +130,10 @@ private:
 	void JumpPressed();
 	void JumpReleased();
 
-	void ShootPressed();
-
 	void SprintPressed();
 	void SprintReleased();
 
-	void CrouchPressed();
+	void PronePressed();
 
 	void TakedownPressed();
 
@@ -143,10 +141,10 @@ private:
 	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	UCameraComponent* FirstPersonCamera;
-
+	USpringArmComponent* SpringArm;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	UChildActorComponent* ChildCrossbow;
+	UCameraComponent* Camera;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	USceneComponent* TakedownRoot;
@@ -165,7 +163,7 @@ protected:
 	bool CanPerformTakedown = true;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	bool IsCrouching;
+	bool IsInProne;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool IsSprinting;
 
@@ -190,7 +188,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float SlowSpeed;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float CrouchingSpeed;
+	float ProneSpeed;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float SprintingSpeed;
 
@@ -238,8 +236,6 @@ protected:
 	float DefaultVignetteIntensity;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	ACrossbow* CrossbowReference;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	APlayerHUD* HUDReference;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	APlayerController* ControllerReference;
@@ -268,7 +264,7 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(UInputComponent* _PlayerInputComponent) override;
 
-	bool GetIsCrouching() const { return IsCrouching; }
+	bool GetIsCrouching() const { return IsInProne; }
 	bool GetIsSprinting() const { return IsSprinting; }
 	bool GetIsInTakedown() const { return IsInTakedown; }
 	bool GetIsEating() const { return IsEating; }

@@ -21,15 +21,14 @@ APlayerCharacter::APlayerCharacter()
  	// Set this character to call Tick() every frame. You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
-	FirstPersonCamera->SetupAttachment(RootComponent);
+	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
+	SpringArm->SetupAttachment(RootComponent);
+	
+	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
+	Camera->SetupAttachment(SpringArm);
 	
 	TakedownRoot = CreateDefaultSubobject<USceneComponent>(TEXT("TakedownRoot"));
 	TakedownRoot->SetupAttachment(RootComponent);
-
-	ChildCrossbow = CreateDefaultSubobject<UChildActorComponent>(TEXT("ChildCrossbow"));
-	ChildCrossbow->SetupAttachment(FirstPersonCamera);
-	ChildCrossbow->SetChildActorClass(ACrossbow::StaticClass());
 }
 
 void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -44,15 +43,13 @@ void APlayerCharacter::BeginPlay()
 
 	CanPerformJump = CanPerformCrouch = CanPerformSprint = CanPerformTakedown = true;
 
-	CrossbowReference = dynamic_cast<ACrossbow*>(ChildCrossbow->GetChildActor());
-	
 	ControllerReference = dynamic_cast<APlayerController*>(GetController());
 	
 	HUDReference = dynamic_cast<APlayerHUD*>(ControllerReference->GetHUD());
 	HUDReference->ShouldDrawReticle = true;
 
-	StandingHeight = FirstPersonCamera->GetRelativeLocation().Z;
-	FirstPersonCamera->PostProcessSettings.VignetteIntensity = DefaultVignetteIntensity;
+	StandingHeight = Camera->GetRelativeLocation().Z;
+	Camera->PostProcessSettings.VignetteIntensity = DefaultVignetteIntensity;
 	
 	OnHealthChanged.AddDynamic(this, &APlayerCharacter::UpdateHealthUI);
 	OnEnergyChanged.AddDynamic(this, &APlayerCharacter::UpdateEnergyUI);
@@ -70,9 +67,6 @@ void APlayerCharacter::BeginPlay()
 
 void APlayerCharacter::EnableAbilities(bool _Enable)
 {
-	CrossbowReference->GetRootComponent()->SetVisibility(_Enable, true);
-	CrossbowReference->CanShoot = _Enable;
-
 	if (_Enable == false)
 	{
 		StopJumping();
@@ -91,32 +85,32 @@ void APlayerCharacter::EnableSprint(bool _Enable)
 
 void APlayerCharacter::ActivateSprint(bool _Activate)
 {
-	if (IsCrouching == true && _Activate == true)
-		ActivateCrouch(false, true);
+	if (IsInProne == true && _Activate == true)
+		ActivateProne(false, true);
 
 	EnableSprint(_Activate);
 }
 
-void APlayerCharacter::SetCrouch(float _VignetteIntensity, float _NewHeight)
+void APlayerCharacter::SetProne(float _VignetteIntensity, float _NewHeight)
 {
-	FVector CameraLocation = FirstPersonCamera->GetRelativeLocation();
+	FVector CameraLocation = Camera->GetRelativeLocation();
 	CameraLocation.Z = _NewHeight;
-	FirstPersonCamera->SetRelativeLocation(CameraLocation);
+	Camera->SetRelativeLocation(CameraLocation);
 
-	FirstPersonCamera->PostProcessSettings.VignetteIntensity = _VignetteIntensity;
+	Camera->PostProcessSettings.VignetteIntensity = _VignetteIntensity;
 }
 
-void APlayerCharacter::ActivateCrouch(bool _Activate, bool _ShouldAnimate)
+void APlayerCharacter::ActivateProne(bool _Activate, bool _ShouldAnimate)
 {
 	if (IsSprinting == true)
 		return;
 
-	IsCrouching = _Activate;
+	IsInProne = _Activate;
 
-	SetSpeed(IsCrouching ? CrouchingSpeed : NormalSpeed);
+	SetSpeed(IsInProne ? ProneSpeed : NormalSpeed);
 
 	if (_ShouldAnimate == false)
-		SetCrouch(0, StandingHeight);
+		SetProne(0, StandingHeight);
 	else
 		CrouchAnimation(_Activate);
 }
@@ -163,7 +157,7 @@ void APlayerCharacter::InitiateTakedown()
 
 	CurrentTakedownDirection = (CurrentAgentInKillRange->GetActorLocation() - GetActorLocation()).GetSafeNormal();
 	
-	FRotator TakedownCameraRotation = UKismetMathLibrary::FindLookAtRotation(FirstPersonCamera->GetComponentLocation(), CurrentAgentInKillRange->GetActorLocation());
+	FRotator TakedownCameraRotation = UKismetMathLibrary::FindLookAtRotation(Camera->GetComponentLocation(), CurrentAgentInKillRange->GetActorLocation());
 	ControllerReference->SetControlRotation(TakedownCameraRotation);
 }
 
@@ -225,8 +219,8 @@ void APlayerCharacter::TryMakeNoise()
 
 void APlayerCharacter::UpdateRaycastAndReticle()
 {
-	FVector Start = FirstPersonCamera->GetComponentLocation();
-	FVector Dest = FirstPersonCamera->GetForwardVector() * 5000 + FirstPersonCamera->GetComponentLocation();
+	FVector Start = Camera->GetComponentLocation();
+	FVector Dest = Camera->GetForwardVector() * 5000 + Camera->GetComponentLocation();
 
 	FHitResult OutHit;
 	bool HitStatus = UKismetSystemLibrary::LineTraceSingle(GetWorld(), Start, Dest, UEngineTypes::ConvertToTraceType(HIT_COLLISION_CHANNEL), true, TArray<AActor*>(), EDrawDebugTrace::None, OutHit, true);
@@ -316,7 +310,9 @@ void APlayerCharacter::MoveForward(float _AxisValue)
 	if (CanMove == false)
 		return;
 	
-	AddMovementInput(GetActorForwardVector(), _AxisValue);
+	FRotator CameraZRotation = FRotator(0, GetControlRotation().Yaw, 0);
+	FVector CameraForwardVector = UKismetMathLibrary::GetForwardVector(CameraZRotation);
+	AddMovementInput(CameraForwardVector, _AxisValue);
 
 	UpdateIsMovingForward(_AxisValue > 0.0f);
 }
@@ -326,7 +322,9 @@ void APlayerCharacter::MoveRight(float _AxisValue)
 	if (CanMove == false)
 		return;
 	
-	AddMovementInput(GetActorRightVector(), _AxisValue);
+	FRotator CameraZRotation = FRotator(0, GetControlRotation().Yaw, 0);
+	FVector CameraRightVector = UKismetMathLibrary::GetRightVector(CameraZRotation);
+	AddMovementInput(CameraRightVector, _AxisValue);
 }
 
 void APlayerCharacter::TurnRate(float _AxisValue)
@@ -372,11 +370,6 @@ void APlayerCharacter::JumpReleased()
 	StopJumping();
 }
 
-void APlayerCharacter::ShootPressed()
-{
-	CrossbowReference->TryShootProjectile(CurrentHitPosition);
-}
-
 void APlayerCharacter::SprintPressed()
 {
 	if (CanPerformSprint == true && IsMovingForward == true)
@@ -388,10 +381,10 @@ void APlayerCharacter::SprintReleased()
 	ActivateSprint(false);
 }
 
-void APlayerCharacter::CrouchPressed()
+void APlayerCharacter::PronePressed()
 {
 	if (CanPerformCrouch == true)
-		ActivateCrouch(IsCrouching == false, true);
+		ActivateProne(IsInProne == false, true);
 }
 
 void APlayerCharacter::TakedownPressed()
@@ -448,12 +441,8 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* _PlayerInputCo
 	_PlayerInputComponent->BindAction(TEXT("Jump"), IE_Pressed, this, &APlayerCharacter::JumpPressed);
 	_PlayerInputComponent->BindAction(TEXT("Jump"), IE_Released, this, &APlayerCharacter::JumpReleased);
 
-	_PlayerInputComponent->BindAction(TEXT("Shoot"), IE_Pressed, this, &APlayerCharacter::ShootPressed);
-
 	_PlayerInputComponent->BindAction(TEXT("Sprint"), IE_Pressed, this, &APlayerCharacter::SprintPressed);
 	_PlayerInputComponent->BindAction(TEXT("Sprint"), IE_Released, this, &APlayerCharacter::SprintReleased);
-
-	_PlayerInputComponent->BindAction(TEXT("Crouch"), IE_Pressed, this, &APlayerCharacter::CrouchPressed);
 
 	_PlayerInputComponent->BindAction(TEXT("Kill"), IE_Pressed, this, &APlayerCharacter::TakedownPressed);
 	_PlayerInputComponent->BindAction(TEXT("Eat"), IE_Pressed, this, &APlayerCharacter::EatPressed);

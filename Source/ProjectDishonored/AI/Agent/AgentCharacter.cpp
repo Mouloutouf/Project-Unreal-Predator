@@ -12,6 +12,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "ProjectDishonored/AI/Navigation/Path.h"
+#include "ProjectDishonored/Player/Projectile.h"
 
 // Sets default values
 AAgentCharacter::AAgentCharacter()
