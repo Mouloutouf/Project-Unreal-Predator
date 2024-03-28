@@ -99,9 +99,6 @@ protected:
 	void UpdateRaycastAndReticle();
 
 	UFUNCTION(BlueprintCallable)
-	void UpdateIsMovingForward(bool _State);
-
-	UFUNCTION(BlueprintCallable)
 	void DecreaseEnergy();
 
 	UFUNCTION(BlueprintCallable)
@@ -175,9 +172,6 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool IsEating;
-	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	bool IsMovingForward;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	float StandingHeight;
@@ -276,7 +270,6 @@ public:
 
 	FVector GetCameraForward() const { return UKismetMathLibrary::GetForwardVector(FRotator(0, GetControlRotation().Yaw, 0)); }
 	
-	bool GetIsMovingForward() const { return IsMovingForward; }
 	bool GetIsMoving() const { return CharacterMovement->Velocity.Size() > 0; }
 	
 	bool GetIsDead() const { return IsDead; }

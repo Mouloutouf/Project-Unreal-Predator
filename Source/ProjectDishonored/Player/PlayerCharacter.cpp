@@ -237,17 +237,6 @@ void APlayerCharacter::UpdateRaycastAndReticle()
 	}
 }
 
-void APlayerCharacter::UpdateIsMovingForward(bool _State)
-{
-	if (_State == IsMovingForward)
-		return;
-
-	IsMovingForward = _State;
-
-	if (IsSprinting == true && IsMovingForward == false)
-		ActivateSprint(false);
-}
-
 void APlayerCharacter::DecreaseEnergy()
 {
 	float EnergyDecreaseSpeed = GetIsMoving() == true ? EnergyMovementDecreaseSpeed : EnergyImmobileDecreaseSpeed;
@@ -307,8 +296,6 @@ void APlayerCharacter::MoveForward(float _AxisValue)
 		return;
 	
 	AddMovementInput(GetCameraForward(), _AxisValue);
-
-	UpdateIsMovingForward(_AxisValue > 0.0f);
 }
 
 void APlayerCharacter::MoveRight(float _AxisValue)
@@ -365,7 +352,7 @@ void APlayerCharacter::JumpReleased()
 
 void APlayerCharacter::SprintPressed()
 {
-	if (CanPerformSprint == true && IsMovingForward == true)
+	if (CanPerformSprint == true)
 		ActivateSprint(true);
 }
 
