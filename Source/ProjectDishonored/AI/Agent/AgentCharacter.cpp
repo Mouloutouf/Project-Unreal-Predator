@@ -5,12 +5,14 @@
 
 #include "AgentController.h"
 #include "BrainComponent.h"
+#include "DrawDebugHelpers.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "ProjectDishonored/ProjectDishonored.h"
 #include "ProjectDishonored/AI/Navigation/Path.h"
 #include "ProjectDishonored/Player/Projectile.h"
 
@@ -127,9 +129,24 @@ void AAgentCharacter::CheckPlayerCanTakedown()
 
 	bool InsideHeight = UKismetMathLibrary::Abs(PlayerReference->GetActorLocation().Z - GetActorLocation().Z) <= PlayerReference->KillHeightRange;
 
-	if ((InsideRange && InsideHeight) != CanPlayerTakedown)
+	bool HasLineOfTakedown = false;
+	if (InsideRange && InsideHeight)
 	{
-		CanPlayerTakedown = InsideRange && InsideHeight;
+		FHitResult HitResult;
+		bool Hit = UKismetSystemLibrary::LineTraceSingle(GetWorld(), GetActorLocation(), PlayerReference->GetActorLocation(),
+			UEngineTypes::ConvertToTraceType(HIT_COLLISION_CHANNEL), true, TArray<AActor*>({ this }), EDrawDebugTrace::None, HitResult, true);
+		if (Hit == true)
+		{
+			//GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::White, FString::Printf(TEXT("HIT OBJECT %s"), *HitResult.Component->GetOwner()->GetName()));
+			HasLineOfTakedown = HitResult.Component->GetOwner() == PlayerReference;
+		}
+		
+		DrawDebugLine(GetWorld(), PlayerReference->GetActorLocation(), GetActorLocation(), HasLineOfTakedown ? FColor::Green : FColor::Red);
+	}
+	
+	if (HasLineOfTakedown != CanPlayerTakedown)
+	{
+		CanPlayerTakedown = HasLineOfTakedown;
 		UpdatePlayerCanTakedown(CanPlayerTakedown);
 	}
 }

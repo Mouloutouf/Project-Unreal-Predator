@@ -7,13 +7,8 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Perception/AISense_Hearing.h"
+#include "ProjectDishonored/ProjectDishonored.h"
 #include "ProjectDishonored/AI/Agent/AgentCharacter.h"
-
-#define HIT_COLLISION_CHANNEL ECC_GameTraceChannel1
-#define PROJECTILE_COLLISION_CHANNEL ECC_GameTraceChannel2
-
-// SAVED DEBUG LOG LINE
-//GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::White, FString::Printf(TEXT("YOUR DEBUG TEXT %f"), YourVariable));
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -223,7 +218,8 @@ void APlayerCharacter::UpdateRaycastAndReticle()
 	FVector Dest = Camera->GetForwardVector() * 5000 + Camera->GetComponentLocation();
 
 	FHitResult OutHit;
-	bool HitStatus = UKismetSystemLibrary::LineTraceSingle(GetWorld(), Start, Dest, UEngineTypes::ConvertToTraceType(HIT_COLLISION_CHANNEL), true, TArray<AActor*>(), EDrawDebugTrace::None, OutHit, true);
+	bool HitStatus = UKismetSystemLibrary::LineTraceSingle(GetWorld(), Start, Dest,
+		UEngineTypes::ConvertToTraceType(HIT_COLLISION_CHANNEL), true, TArray<AActor*>(), EDrawDebugTrace::None, OutHit, true);
 	if (HitStatus == true)
 	{
 		CurrentHitPosition = OutHit.ImpactPoint;
