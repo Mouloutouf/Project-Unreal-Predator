@@ -32,6 +32,7 @@ void AAgentCharacter::BeginPlay()
 	PlayerReference = dynamic_cast<APlayerCharacter*>(PlayerPawn);
 
 	ControllerReference = dynamic_cast<AAgentController*>(GetController());
+	ControllerReference->PlayerReference = PlayerReference;
 
 	IsPathForward = Path->Forward;
 	ResetPath();

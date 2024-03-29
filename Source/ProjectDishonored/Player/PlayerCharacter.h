@@ -146,6 +146,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	USceneComponent* TakedownRoot;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UCapsuleComponent* HidingTrigger;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool CanMove = true;
@@ -166,6 +169,9 @@ protected:
 	bool IsSprinting;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool IsHidden;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool PerformTakedownMove;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool IsInTakedown;
@@ -178,7 +184,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float CrouchingHeight;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float NormalSpeed;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float SlowSpeed;
@@ -253,32 +259,38 @@ protected:
 	FOnEnergyChangedSignature OnEnergyChanged;
 	
 public:
-	// Called every frame
 	virtual void Tick(float _DeltaTime) override;
 
-	// Called to bind functionality to input
+	// Input Binding
 	virtual void SetupPlayerInputComponent(UInputComponent* _PlayerInputComponent) override;
 
+	// Readonly Components
+	USpringArmComponent* GetSpringArm() const { return SpringArm; }
+	UCameraComponent* GetCamera() const { return Camera; }
+	USceneComponent* GetTakedownRoot() const { return TakedownRoot; }
+	UCapsuleComponent* GetHidingTrigger() const { return HidingTrigger; }
+
+	// Readonly Status Booleans
 	bool GetIsInProne() const { return IsInProne; }
-	
 	bool GetIsSprinting() const { return IsSprinting; }
-	
+	bool GetIsHidden() const { return IsHidden; }
 	bool GetIsInTakedown() const { return IsInTakedown; }
 	bool GetCanPerformTakedown() const { return CanPerformTakedown; }
-	
 	bool GetIsEating() const { return IsEating; }
+	bool GetIsDead() const { return IsDead; }
 
 	FVector GetCameraForward() const { return UKismetMathLibrary::GetForwardVector(FRotator(0, GetControlRotation().Yaw, 0)); }
 	
 	bool GetIsMoving() const { return CharacterMovement->Velocity.Size() > 0; }
-	
-	bool GetIsDead() const { return IsDead; }
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void SetTakedownWidgetVisible(bool _Visible);
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void SetConsumeWidgetVisible(bool _Visible);
+
+	UFUNCTION(BlueprintCallable)
+	void SetHiddenStatus(bool _Status);
 	
 	//
 	

@@ -79,6 +79,9 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void UpdatePerception(AActor* _Actor, FAIStimulus _Stimulus);
 
+	UFUNCTION(BlueprintCallable)
+	void UpdatePlayerDetected();
+	
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void UpdateDetectionTimeline();
 
@@ -94,6 +97,8 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	int SuspicionLevel;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool PlayerSensed;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	bool PlayerDetected;
 
@@ -161,4 +166,6 @@ public:
 	// TODO Create an Agent Data class to store data that should be known by both the Agent Controller and Agent Character, and to which both of them can write
 	bool GetPlayerDetected() const { return PlayerDetected; }
 	int GetSuspicionLevel() const { return SuspicionLevel; }
+
+	APlayerCharacter* PlayerReference;
 };

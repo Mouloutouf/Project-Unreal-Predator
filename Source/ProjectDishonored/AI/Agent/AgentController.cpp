@@ -45,8 +45,8 @@ void AAgentController::UpdateDetectionMeterAngle()
 	if (UKismetSystemLibrary::IsValid(DetectionMeterWidget) == false)
 		return;
 	
-	FVector AgentPositionFromPlayer = ControlledAgent->GetActorLocation() - ControlledAgent->GetPlayer()->GetActorLocation();
-	FVector PlayerDirection = ControlledAgent->GetPlayer()->GetCameraForward();
+	FVector AgentPositionFromPlayer = ControlledAgent->GetActorLocation() - PlayerReference->GetActorLocation();
+	FVector PlayerDirection = PlayerReference->GetCameraForward();
 	
 	float Angle = -AngleBetweenVectors(AgentPositionFromPlayer, PlayerDirection);
 	DetectionMeterWidget->SetRenderTransformAngle(Angle);
@@ -57,7 +57,7 @@ float AAgentController::GetDetectionIncreaseRate()
 	float MaxIncreaseRate = SuspicionLevel == 0 ? MaxLureIncreaseRate : MaxSuspicionIncreaseRate;
 	float MinIncreaseRate = SuspicionLevel == 0 ? MinLureIncreaseRate : MinSuspicionIncreaseRate;
 	
-	float Distance = FVector::Distance(ControlledAgent->GetActorLocation(), ControlledAgent->GetPlayer()->GetActorLocation());
+	float Distance = FVector::Distance(ControlledAgent->GetActorLocation(), PlayerReference->GetActorLocation());
 	// TODO Arbitrary value what the fuck is this
 	float Alpha = Distance / 1500;
 	
@@ -108,7 +108,7 @@ bool AAgentController::TryUpdateLurePosition()
 	if (PlayerDetected == false)
 		return false;
 
-	SetLurePosition(ControlledAgent->GetPlayer()->GetActorLocation());
+	SetLurePosition(PlayerReference->GetActorLocation());
 	
 	return true;
 }
@@ -134,7 +134,7 @@ bool AAgentController::TrySetChasedPlayer()
 	if (SuspicionLevel != 2)
 		return false;
 
-	Blackboard->SetValueAsObject("DetectedPlayer", ControlledAgent->GetPlayer());
+	Blackboard->SetValueAsObject("DetectedPlayer", PlayerReference);
 
 	return true;
 }
@@ -167,8 +167,8 @@ void AAgentController::DecreaseTimeline()
 
 bool AAgentController::TryUpdateDetectionRate()
 {
-	int PlayerSprintState = ControlledAgent->GetPlayer()->GetIsSprinting() ? 1 : 0;
-	int PlayerCrouchState = ControlledAgent->GetPlayer()->GetIsInProne() ? -1 : 0;
+	int PlayerSprintState = PlayerReference->GetIsSprinting() ? 1 : 0;
+	int PlayerCrouchState = PlayerReference->GetIsInProne() ? -1 : 0;
 
 	int NewPlayerState = PlayerSprintState + PlayerCrouchState;
 	
@@ -207,17 +207,23 @@ void AAgentController::UpdatePerception(AActor* _Actor, FAIStimulus _Stimulus)
 	if (ControlledAgent->GetIsDead() == true)
 		return;
 
-	APlayerCharacter* Player = dynamic_cast<APlayerCharacter*>(_Actor);
-	if (Player != nullptr && Player->GetIsDead() == false)
-	{
-		ControlledAgent->IsPlayerDetected = PlayerDetected = _Stimulus.WasSuccessfullySensed();
-		if (PlayerDetected == true)
-			SetDetectionVisibility(true);
-	}
+	if ((AActor*)PlayerReference == _Actor)
+		PlayerSensed = _Stimulus.WasSuccessfullySensed();
 	
 	AAgentCharacter* OtherAgent = dynamic_cast<AAgentCharacter*>(_Actor);
 	if (OtherAgent != nullptr)
 		TryDetectDeadBody(OtherAgent);
+}
+
+void AAgentController::UpdatePlayerDetected()
+{
+	bool PlayerDetectedStatus = PlayerSensed == true && PlayerReference->GetIsDead() == false && PlayerReference->GetIsHidden() == false;
+	if (PlayerDetected != PlayerDetectedStatus)
+	{
+		ControlledAgent->IsPlayerDetected = PlayerDetected = PlayerDetectedStatus;
+		if (PlayerDetected == true)
+			SetDetectionVisibility(true);
+	}
 }
 
 void AAgentController::OnDetectionTimelineFinished()
@@ -250,6 +256,8 @@ void AAgentController::Tick(float _DeltaTime)
 	if (ControlledAgent->GetIsDead() == true)
 		return;
 
+	UpdatePlayerDetected();
+	
 	TryUpdateLurePosition();
 	TryUpdateDetectionRate();
 	

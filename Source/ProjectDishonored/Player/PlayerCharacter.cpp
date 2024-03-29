@@ -3,6 +3,7 @@
 #include "PlayerCharacter.h"
 
 #include "Blueprint/WidgetBlueprintLibrary.h"
+#include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -24,6 +25,9 @@ APlayerCharacter::APlayerCharacter()
 	
 	TakedownRoot = CreateDefaultSubobject<USceneComponent>(TEXT("TakedownRoot"));
 	TakedownRoot->SetupAttachment(RootComponent);
+
+	HidingTrigger = CreateDefaultSubobject<UCapsuleComponent>(TEXT("HidingTrigger"));
+	HidingTrigger->SetupAttachment(RootComponent);
 }
 
 void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -52,7 +56,7 @@ void APlayerCharacter::BeginPlay()
 	SetHealth(MaxHealth);
 	SetEnergy(MaxEnergy);
 
-	NormalSpeed = GetCharacterMovement()->MaxWalkSpeed;
+	GetCharacterMovement()->MaxWalkSpeed = NormalSpeed;
 
 	ControllerReference->SetShowMouseCursor(false);
 	UWidgetBlueprintLibrary::SetInputMode_GameOnly(ControllerReference);
@@ -428,3 +432,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* _PlayerInputCo
 	_PlayerInputComponent->BindAction(TEXT("Eat"), IE_Pressed, this, &APlayerCharacter::EatPressed);
 }
 
+void APlayerCharacter::SetHiddenStatus(bool _Status)
+{
+	IsHidden = _Status;
+}

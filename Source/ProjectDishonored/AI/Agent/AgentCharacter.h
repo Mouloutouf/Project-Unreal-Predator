@@ -17,11 +17,9 @@ class PROJECTDISHONORED_API AAgentCharacter : public ACharacter
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this character's properties
 	AAgentCharacter();
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 	UFUNCTION(BlueprintCallable)
@@ -79,14 +77,12 @@ protected:
 	float HitForce = 10000;
 	
 public:
-	// Called every frame
 	virtual void Tick(float _DeltaTime) override;
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(UInputComponent* _PlayerInputComponent) override;
 
 	bool GetIsDead() const { return IsDead; }
-	APlayerCharacter* GetPlayer() const { return PlayerReference; }
 
 	UFUNCTION(BlueprintCallable)
 	void ChangeCharacterSpeed(float _NewSpeed);
