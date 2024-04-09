@@ -83,7 +83,7 @@ bool AAgentController::TryDecreaseSuspicion()
 
 bool AAgentController::TryChangeSuspicion(int _Value)
 {
-	if (_Value <= 0 || _Value >= 2)
+	if (_Value < 0 || _Value > 2)
 		return false;
 
 	ControlledAgent->CurrentSuspicionLevel = SuspicionLevel = _Value;
