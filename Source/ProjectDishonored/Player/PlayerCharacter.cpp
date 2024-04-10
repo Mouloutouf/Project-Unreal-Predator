@@ -122,15 +122,16 @@ void APlayerCharacter::SetSpeed(float _NewSpeed)
 void APlayerCharacter::SetHealth(float _NewHealth)
 {
 	CurrentHealth = FMath::Clamp(_NewHealth, 0.0f, MaxHealth);
+	
 	OnHealthChanged.Broadcast();
+
+	if (CurrentHealth <= 0)
+		Die();
 }
 
 void APlayerCharacter::ChangeHealth(float _HealthChange)
 {
 	SetHealth(CurrentHealth + _HealthChange);
-
-	if (CurrentHealth <= 0)
-		Die();
 }
 
 void APlayerCharacter::SetEnergy(float _NewEnergy)

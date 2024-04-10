@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "AgentCharacter.h"
 
 #include "AgentController.h"
@@ -195,7 +194,6 @@ void AAgentCharacter::TryDeathByProjectile(AActor* _Other)
 		Projectile->Destroy();
 }
 
-// Called every frame
 void AAgentCharacter::Tick(float _DeltaTime)
 {
 	Super::Tick(_DeltaTime);
@@ -204,13 +202,6 @@ void AAgentCharacter::Tick(float _DeltaTime)
 		CheckPlayerCanTakedown();
 	else
 		CheckPlayerCanConsume();
-}
-
-// Called to bind functionality to input
-void AAgentCharacter::SetupPlayerInputComponent(UInputComponent* _PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(_PlayerInputComponent);
-
 }
 
 void AAgentCharacter::EnableCharacter(bool _Enable)
