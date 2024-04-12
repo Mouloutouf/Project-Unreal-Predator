@@ -188,7 +188,8 @@ void AAgentCharacter::TryDeathByProjectile(AActor* _Other)
 		return;
 
 	FVector HitDirection = Projectile->GetRootComponent()->GetComponentRotation().Vector() * HitForce;
-	Death(HitDirection);
+	// TODO Make this bone name a variable you have to fill in as a user
+	Death(HitDirection, "head");
 
 	if (UKismetSystemLibrary::IsValid(Projectile) == true)
 		Projectile->Destroy();
@@ -214,7 +215,7 @@ void AAgentCharacter::EnableCharacter(bool _Enable)
 		Stop();
 }
 
-void AAgentCharacter::Death(FVector _HitDirection)
+void AAgentCharacter::Death(FVector _HitDirection, FName _BoneToHit)
 {
 	IsDead = true;
 
@@ -222,8 +223,7 @@ void AAgentCharacter::Death(FVector _HitDirection)
 	CapsuleComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	
 	Mesh->SetSimulatePhysics(true);
-	// TODO Make this bone name a variable you have to fill in as a user
-	Mesh->AddImpulse(_HitDirection, "head");
+	Mesh->AddImpulse(_HitDirection, _BoneToHit);
 
 	if (PlayerReference != nullptr)
 		PlayerReference->SetTakedownWidgetVisible(false);

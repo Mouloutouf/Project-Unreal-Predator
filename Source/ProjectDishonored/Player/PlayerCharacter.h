@@ -22,11 +22,9 @@ class PROJECTDISHONORED_API APlayerCharacter : public ACharacter
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this character's properties
 	APlayerCharacter();
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 	UFUNCTION(BlueprintCallable)
@@ -54,13 +52,7 @@ protected:
 	void SetHealth(float _NewHealth);
 
 	UFUNCTION(BlueprintCallable)
-	void ChangeHealth(float _HealthChange);
-
-	UFUNCTION(BlueprintCallable)
 	void SetEnergy(float _NewEnergy);
-
-	UFUNCTION(BlueprintCallable)
-	void ChangeEnergy(float _EnergyChange);
 	
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void UpdateHealthUI();
@@ -251,6 +243,8 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	FVector CurrentTakedownDirection;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float TakedownRagdollForce = 10000;
 
 	UPROPERTY(BlueprintAssignable, BlueprintReadOnly)
 	FOnHealthChangedSignature OnHealthChanged;
@@ -283,6 +277,12 @@ public:
 	
 	bool GetIsMoving() const { return CharacterMovement->Velocity.Size() > 0; }
 
+	UFUNCTION(BlueprintCallable)
+	void ChangeHealth(float _HealthChange);
+
+	UFUNCTION(BlueprintCallable)
+	void ChangeEnergy(float _EnergyChange);
+	
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void SetTakedownWidgetVisible(bool _Visible);
 

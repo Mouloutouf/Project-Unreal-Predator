@@ -79,9 +79,6 @@ protected:
 public:
 	virtual void Tick(float _DeltaTime) override;
 
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(UInputComponent* _PlayerInputComponent) override;
-
 	bool GetIsDead() const { return IsDead; }
 
 	UFUNCTION(BlueprintCallable)
@@ -97,7 +94,7 @@ public:
 	void EnableCharacter(bool _Enable);
 
 	UFUNCTION(BlueprintCallable)
-	void Death(FVector _HitDirection);
+	void Death(FVector _HitDirection, FName _BoneToHit);
 
 	//
 	
