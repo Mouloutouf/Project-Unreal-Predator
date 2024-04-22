@@ -150,14 +150,31 @@ void APlayerCharacter::EnableLoadingAnimation(bool _Enable)
 	HUDReference->SetWidgetVisible(_Enable, HUDReference->LoadingAnimationWidget);
 }
 
+void APlayerCharacter::TryTakedown()
+{
+	float MinDist = FLT_MAX;
+	for (AAgentCharacter* Agent : AgentsInTakedownRange)
+	{
+		float Dist = FVector::Distance(Agent->GetActorLocation(), GetActorLocation());
+		if (Dist < MinDist)
+		{
+			CurrentAgentInTakedownRange = Agent;
+			MinDist = Dist;
+		}
+	}
+
+	if (UKismetSystemLibrary::IsValid(CurrentAgentInTakedownRange) == true)
+		InitiateTakedown();
+}
+
 void APlayerCharacter::InitiateTakedown()
 {
 	IsInTakedown = PerformTakedownMove = true;
 	EnableAbilities(false);
 
-	CurrentTakedownDirection = (CurrentAgentInKillRange->GetActorLocation() - GetActorLocation()).GetSafeNormal();
+	CurrentTakedownDirection = (CurrentAgentInTakedownRange->GetActorLocation() - GetActorLocation()).GetSafeNormal();
 	
-	FRotator TakedownCameraRotation = UKismetMathLibrary::FindLookAtRotation(Camera->GetComponentLocation(), CurrentAgentInKillRange->GetActorLocation());
+	FRotator TakedownCameraRotation = UKismetMathLibrary::FindLookAtRotation(Camera->GetComponentLocation(), CurrentAgentInTakedownRange->GetActorLocation());
 	ControllerReference->SetControlRotation(TakedownCameraRotation);
 }
 
@@ -167,9 +184,9 @@ void APlayerCharacter::TakedownKill()
 
 	SetTakedownWidgetVisible(false);
 	
-	if (CurrentAgentInKillRange->IsPlayerDetected == true)
+	if (CurrentAgentInTakedownRange->IsPlayerDetected == true)
 	{
-		float KillAnimRate = CurrentAgentInKillRange->CurrentSuspicionLevel == 2 ? DetectedKillSlowAnimationRate : DetectedKillNormalAnimationRate;
+		float KillAnimRate = CurrentAgentInTakedownRange->CurrentSuspicionLevel == 2 ? DetectedKillSlowAnimationRate : DetectedKillNormalAnimationRate;
 		KillAnimation(KillAnimRate);
 	}
 	else
@@ -178,15 +195,35 @@ void APlayerCharacter::TakedownKill()
 
 void APlayerCharacter::FinishTakedown()
 {
-	CurrentAgentInKillRange->Death(CurrentTakedownDirection * TakedownRagdollForce);
+	CurrentAgentInTakedownRange->Death(CurrentTakedownDirection * TakedownRagdollForce);
 	
-	if (CurrentAgentInKillRange->CurrentSuspicionLevel == 2)
+	if (CurrentAgentInTakedownRange->CurrentSuspicionLevel == 2)
 		ChangeHealth(-TakedownDetectedHealthDecrease);
 
 	IsInTakedown = false;
 	EnableAbilities(true);
 
-	CurrentAgentInKillRange = nullptr;
+	RemoveAgentFromTakedown(CurrentAgentInTakedownRange);
+	CurrentAgentInTakedownRange = nullptr;
+
+	SetTakedownWidgetVisible(AgentsInTakedownRange.Num() > 0);
+}
+
+void APlayerCharacter::TryConsumeBody()
+{
+	float MinDist = FLT_MAX;
+	for (AAgentCharacter* Agent : DeadAgentsInRange)
+	{
+		float Dist = FVector::Distance(Agent->GetActorLocation(), GetActorLocation());
+		if (Dist < MinDist)
+		{
+			CurrentDeadAgentInRange = Agent;
+			MinDist = Dist;
+		}
+	}
+
+	if (UKismetSystemLibrary::IsValid(CurrentDeadAgentInRange) == true)
+		InitiateConsumeBody();
 }
 
 void APlayerCharacter::InitiateConsumeBody()
@@ -208,7 +245,10 @@ void APlayerCharacter::FinishConsumeBody()
 	IsEating = false;
 	EnableAbilities(true);
 
+	RemoveDeadAgent(CurrentDeadAgentInRange);
 	CurrentDeadAgentInRange = nullptr;
+
+	SetConsumeWidgetVisible(DeadAgentsInRange.Num() > 0);
 }
 
 void APlayerCharacter::TryMakeNoise()
@@ -374,18 +414,18 @@ void APlayerCharacter::PronePressed()
 
 void APlayerCharacter::TakedownPressed()
 {
-	if (UKismetSystemLibrary::IsValid(CurrentAgentInKillRange) == false || IsInTakedown == true)
+	if (IsInTakedown == true)
 		return;
 
-	InitiateTakedown();
+	TryTakedown();
 }
 
 void APlayerCharacter::EatPressed()
 {
-	if (UKismetSystemLibrary::IsValid(CurrentDeadAgentInRange) == false || IsEating == true)
+	if (IsEating == true)
 		return;
 
-	InitiateConsumeBody();
+	TryConsumeBody();
 }
 
 // Called every frame
@@ -404,7 +444,7 @@ void APlayerCharacter::Tick(float _DeltaTime)
 	{
 		SetActorLocation(GetActorLocation() + CurrentTakedownDirection * TakedownMoveSpeed * UGameplayStatics::GetWorldDeltaSeconds(this));
 
-		if (FVector::Distance(GetActorLocation(), CurrentAgentInKillRange->GetActorLocation()) < TakedownAgentOffsetDistance)
+		if (FVector::Distance(GetActorLocation(), CurrentAgentInTakedownRange->GetActorLocation()) < TakedownAgentOffsetDistance)
 			TakedownKill();
 	}
 }
@@ -436,4 +476,28 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* _PlayerInputCo
 void APlayerCharacter::SetHiddenStatus(bool _Status)
 {
 	IsHidden = _Status;
+}
+
+void APlayerCharacter::AddAgentForTakedown(AAgentCharacter* _Agent)
+{
+	AgentsInTakedownRange.Add(_Agent);
+	SetTakedownWidgetVisible(AgentsInTakedownRange.Num() > 0);
+}
+
+void APlayerCharacter::RemoveAgentFromTakedown(AAgentCharacter* _Agent)
+{
+	AgentsInTakedownRange.Remove(_Agent);
+	SetTakedownWidgetVisible(AgentsInTakedownRange.Num() > 0);
+}
+
+void APlayerCharacter::AddDeadAgent(AAgentCharacter* _Agent)
+{
+	DeadAgentsInRange.Add(_Agent);
+	SetConsumeWidgetVisible(DeadAgentsInRange.Num() > 0);
+}
+
+void APlayerCharacter::RemoveDeadAgent(AAgentCharacter* _Agent)
+{
+	DeadAgentsInRange.Remove(_Agent);
+	SetConsumeWidgetVisible(DeadAgentsInRange.Num() > 0);
 }

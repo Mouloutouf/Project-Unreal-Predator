@@ -115,8 +115,11 @@ bool AAgentCharacter::CheckPathEnd()
 void AAgentCharacter::UpdatePlayerCanTakedown(bool _CanTakedown)
 {
 	bool CanPerformTakedown = _CanTakedown && PlayerReference->GetCanPerformTakedown();
-	PlayerReference->CurrentAgentInKillRange = CanPerformTakedown ? this : nullptr;
-	PlayerReference->SetTakedownWidgetVisible(CanPerformTakedown);
+	
+	if (CanPerformTakedown)
+		PlayerReference->AddAgentForTakedown(this);
+	else
+		PlayerReference->RemoveAgentFromTakedown(this);
 }
 
 void AAgentCharacter::CheckPlayerCanTakedown()
@@ -154,8 +157,10 @@ void AAgentCharacter::CheckPlayerCanTakedown()
 // TODO Should create some sort of generic interaction component which allows an object to expose an interaction to the player
 void AAgentCharacter::UpdatePlayerCanConsume(bool _CanConsume)
 {
-	PlayerReference->CurrentDeadAgentInRange = _CanConsume ? this : nullptr;
-	PlayerReference->SetConsumeWidgetVisible(_CanConsume);
+	if (_CanConsume)
+		PlayerReference->AddDeadAgent(this);
+	else
+		PlayerReference->RemoveDeadAgent(this);
 }
 
 // TODO Add a check for if the player is actually looking in the direction of the body
@@ -225,8 +230,7 @@ void AAgentCharacter::Death(FVector _HitDirection)
 	for (FName BoneToHit : BonesToHitOnDeath)
 		Mesh->AddImpulse(_HitDirection, BoneToHit);
 
-	if (PlayerReference != nullptr)
-		PlayerReference->SetTakedownWidgetVisible(false);
+	PlayerReference->RemoveAgentFromTakedown(this);
 
 	ControllerReference->SetDetectionVisibility(false);
 	ControllerReference->GetBlackboardComponent()->SetValueAsBool(BlackboardKeyDeathState, true);

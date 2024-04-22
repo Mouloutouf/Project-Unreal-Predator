@@ -63,6 +63,9 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void EnableLoadingAnimation(bool _Enable);
 
+	UFUNCTION()
+	void TryTakedown();
+	
 	UFUNCTION(BlueprintCallable)
 	void InitiateTakedown();
 
@@ -75,6 +78,9 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void KillAnimation(float _Rate);
 
+	UFUNCTION()
+	void TryConsumeBody();
+	
 	UFUNCTION(BlueprintCallable)
 	void InitiateConsumeBody();
 
@@ -236,6 +242,12 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	FVector CurrentHitPosition;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	AAgentCharacter* CurrentAgentInTakedownRange;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	AAgentCharacter* CurrentDeadAgentInRange;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float TakedownAgentOffsetDistance = 100;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -291,14 +303,23 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SetHiddenStatus(bool _Status);
+
+	UFUNCTION()
+	void AddAgentForTakedown(AAgentCharacter* _Agent);
+	UFUNCTION()
+	void RemoveAgentFromTakedown(AAgentCharacter* _Agent);
+
+	UFUNCTION()
+	void AddDeadAgent(AAgentCharacter* _Agent);
+	UFUNCTION()
+	void RemoveDeadAgent(AAgentCharacter* _Agent);
 	
 	//
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	AAgentCharacter* CurrentAgentInKillRange;
-
+	TSet<AAgentCharacter*> AgentsInTakedownRange;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	AAgentCharacter* CurrentDeadAgentInRange;
+	TSet<AAgentCharacter*> DeadAgentsInRange;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float UndetectedKillRadius = 200;

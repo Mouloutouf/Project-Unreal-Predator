@@ -85,10 +85,10 @@ protected:
 	float HitForce = 10000;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TArray<FName> BonesToHitOnDeath; // should include spine1 and head
+	TArray<FName> BonesToHitOnDeath;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FName BodyCenterBone; // Should be Hips
+	FName BodyCenterBone;
 	
 public:
 	virtual void Tick(float _DeltaTime) override;
@@ -116,5 +116,6 @@ public:
 	APath* Path;
 
 	bool IsPlayerDetected;
+	
 	int CurrentSuspicionLevel;
 };
