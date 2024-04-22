@@ -45,12 +45,20 @@ protected:
 
 	UFUNCTION(BlueprintCallable)
 	void TryDeathByProjectile(AActor* _Other);
+
+	FVector GetBodyCenterLocation() const
+	{
+		return BodyCenterBone.IsNone() == false ? Mesh->GetBoneLocation(BodyCenterBone) : GetActorLocation();
+	}
 	
 	//
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	bool IsDead;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FName BlackboardKeyDeathState;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	AAgentController* ControllerReference;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
@@ -75,6 +83,12 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float HitForce = 10000;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TArray<FName> BonesToHitOnDeath; // should include spine1 and head
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FName BodyCenterBone; // Should be Hips
 	
 public:
 	virtual void Tick(float _DeltaTime) override;
@@ -94,7 +108,7 @@ public:
 	void EnableCharacter(bool _Enable);
 
 	UFUNCTION(BlueprintCallable)
-	void Death(FVector _HitDirection, FName _BoneToHit);
+	void Death(FVector _HitDirection);
 
 	//
 	

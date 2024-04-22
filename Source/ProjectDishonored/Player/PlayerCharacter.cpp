@@ -178,8 +178,7 @@ void APlayerCharacter::TakedownKill()
 
 void APlayerCharacter::FinishTakedown()
 {
-	// TODO Make this bone name a variable you have to fill in as a user
-	CurrentAgentInKillRange->Death(CurrentTakedownDirection * TakedownRagdollForce, "spine1");
+	CurrentAgentInKillRange->Death(CurrentTakedownDirection * TakedownRagdollForce);
 	
 	if (CurrentAgentInKillRange->CurrentSuspicionLevel == 2)
 		ChangeHealth(-TakedownDetectedHealthDecrease);

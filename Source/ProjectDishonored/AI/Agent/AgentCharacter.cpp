@@ -125,15 +125,15 @@ void AAgentCharacter::CheckPlayerCanTakedown()
 		return;
 
 	float KillRadius = ControllerReference->GetPlayerDetected() == true ? PlayerReference->DetectedKillRadius : PlayerReference->UndetectedKillRadius;
-	bool InsideRange = FVector::Distance(GetActorLocation(), PlayerReference->GetActorLocation()) <= KillRadius;
+	bool InsideRange = FVector::Distance(GetBodyCenterLocation(), PlayerReference->GetActorLocation()) <= KillRadius;
 
-	bool InsideHeight = UKismetMathLibrary::Abs(PlayerReference->GetActorLocation().Z - GetActorLocation().Z) <= PlayerReference->KillHeightRange;
+	bool InsideHeight = UKismetMathLibrary::Abs(PlayerReference->GetActorLocation().Z - GetBodyCenterLocation().Z) <= PlayerReference->KillHeightRange;
 
 	bool HasLineOfTakedown = false;
 	if (InsideRange && InsideHeight)
 	{
 		FHitResult HitResult;
-		bool Hit = UKismetSystemLibrary::LineTraceSingle(GetWorld(), GetActorLocation(), PlayerReference->GetActorLocation(),
+		bool Hit = UKismetSystemLibrary::LineTraceSingle(GetWorld(), GetBodyCenterLocation(), PlayerReference->GetActorLocation(),
 			UEngineTypes::ConvertToTraceType(HIT_COLLISION_CHANNEL), true, TArray<AActor*>({ this }), EDrawDebugTrace::None, HitResult, true);
 		if (Hit == true)
 		{
@@ -141,7 +141,7 @@ void AAgentCharacter::CheckPlayerCanTakedown()
 			HasLineOfTakedown = HitResult.Component->GetOwner() == PlayerReference;
 		}
 		
-		DrawDebugLine(GetWorld(), PlayerReference->GetActorLocation(), GetActorLocation(), HasLineOfTakedown ? FColor::Green : FColor::Red);
+		DrawDebugLine(GetWorld(), PlayerReference->GetActorLocation(), GetBodyCenterLocation(), HasLineOfTakedown ? FColor::Green : FColor::Red);
 	}
 	
 	if (HasLineOfTakedown != CanPlayerTakedown)
@@ -164,9 +164,9 @@ void AAgentCharacter::CheckPlayerCanConsume()
 	if (PlayerReference == nullptr || PlayerReference->GetIsEating() == true)
 		return;
 
-	bool InsideRange = FVector::Distance(Mesh->GetBoneLocation("pelvis"), PlayerReference->GetActorLocation()) <= PlayerReference->ConsumeRadius;
+	bool InsideRange = FVector::Distance(GetBodyCenterLocation(), PlayerReference->GetActorLocation()) <= PlayerReference->ConsumeRadius;
 
-	bool InsideHeight = UKismetMathLibrary::Abs(PlayerReference->GetActorLocation().Z - Mesh->GetBoneLocation("pelvis").Z) <= PlayerReference->ConsumeHeightRange;
+	bool InsideHeight = UKismetMathLibrary::Abs(PlayerReference->GetActorLocation().Z - GetBodyCenterLocation().Z) <= PlayerReference->ConsumeHeightRange;
 
 	if ((InsideRange && InsideHeight) != CanPlayerConsume)
 	{
@@ -188,8 +188,7 @@ void AAgentCharacter::TryDeathByProjectile(AActor* _Other)
 		return;
 
 	FVector HitDirection = Projectile->GetRootComponent()->GetComponentRotation().Vector() * HitForce;
-	// TODO Make this bone name a variable you have to fill in as a user
-	Death(HitDirection, "head");
+	Death(HitDirection);
 
 	if (UKismetSystemLibrary::IsValid(Projectile) == true)
 		Projectile->Destroy();
@@ -215,7 +214,7 @@ void AAgentCharacter::EnableCharacter(bool _Enable)
 		Stop();
 }
 
-void AAgentCharacter::Death(FVector _HitDirection, FName _BoneToHit)
+void AAgentCharacter::Death(FVector _HitDirection)
 {
 	IsDead = true;
 
@@ -223,12 +222,12 @@ void AAgentCharacter::Death(FVector _HitDirection, FName _BoneToHit)
 	CapsuleComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	
 	Mesh->SetSimulatePhysics(true);
-	Mesh->AddImpulse(_HitDirection, _BoneToHit);
+	for (FName BoneToHit : BonesToHitOnDeath)
+		Mesh->AddImpulse(_HitDirection, BoneToHit);
 
 	if (PlayerReference != nullptr)
 		PlayerReference->SetTakedownWidgetVisible(false);
 
 	ControllerReference->SetDetectionVisibility(false);
-	// TODO Find a solution to make the name available for editing by the user
-	ControllerReference->GetBlackboardComponent()->SetValueAsBool(UKismetSystemLibrary::MakeLiteralName("DeadState"), true);
+	ControllerReference->GetBlackboardComponent()->SetValueAsBool(BlackboardKeyDeathState, true);
 }
