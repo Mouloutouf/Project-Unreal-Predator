@@ -9,6 +9,8 @@
 
 AGun::AGun()
 {
+	SetRootComponent(CreateDefaultSubobject<USceneComponent>(TEXT("DefaultRoot")));
+	
 	FireRoot = CreateDefaultSubobject<USceneComponent>(TEXT("FireRoot"));
 	FireRoot->SetupAttachment(RootComponent);
 }
