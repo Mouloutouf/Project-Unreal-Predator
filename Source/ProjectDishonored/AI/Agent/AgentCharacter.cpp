@@ -111,7 +111,6 @@ bool AAgentCharacter::CheckPathEnd()
 	return CurrentPathIndex < 0;
 }
 
-// TODO Should make sure it is always the closest agent to the player that is selected, if there are multiple ones, so they don't overwrite each other constantly
 void AAgentCharacter::UpdatePlayerCanTakedown(bool _CanTakedown)
 {
 	bool CanPerformTakedown = _CanTakedown && PlayerReference->GetCanPerformTakedown();

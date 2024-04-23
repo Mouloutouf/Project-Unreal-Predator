@@ -285,9 +285,15 @@ public:
 	bool GetIsEating() const { return IsEating; }
 	bool GetIsDead() const { return IsDead; }
 
-	FVector GetCameraForward() const { return UKismetMathLibrary::GetForwardVector(FRotator(0, GetControlRotation().Yaw, 0)); }
+	FVector GetCameraForward() const
+	{
+		return UKismetMathLibrary::GetForwardVector(FRotator(0, GetControlRotation().Yaw, 0));
+	}
 	
-	bool GetIsMoving() const { return CharacterMovement->Velocity.Size() > 0; }
+	bool GetIsMoving() const
+	{
+		return CharacterMovement->Velocity.Size() > 0;
+	}
 
 	UFUNCTION(BlueprintCallable)
 	void ChangeHealth(float _HealthChange);

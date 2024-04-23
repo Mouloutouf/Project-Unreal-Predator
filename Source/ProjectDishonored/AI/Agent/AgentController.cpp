@@ -88,6 +88,8 @@ bool AAgentController::TryChangeSuspicion(int _Value)
 
 	ControlledAgent->CurrentSuspicionLevel = SuspicionLevel = _Value;
 	UpdateSuspicion();
+
+	SetAimedStatus(_Value > 0);
 	
 	return true;
 }

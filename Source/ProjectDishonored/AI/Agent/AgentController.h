@@ -58,6 +58,9 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	bool TryClearChasedPlayer();
 
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void SetAimedStatus(bool _Status);
+	
 	UFUNCTION(BlueprintCallable)
 	void IncreaseTimeline();
 	UFUNCTION(BlueprintCallable)
