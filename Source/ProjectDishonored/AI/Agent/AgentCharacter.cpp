@@ -27,6 +27,8 @@ void AAgentCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	GatherDetectableCapsules();
+	
 	APawn* PlayerPawn = UGameplayStatics::GetPlayerController(this, 0)->GetPawn();
 	PlayerReference = dynamic_cast<APlayerCharacter*>(PlayerPawn);
 

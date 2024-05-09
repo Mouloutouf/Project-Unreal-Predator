@@ -8,6 +8,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "ProjectDishonored/Gameplay/Character/HideableInterface.h"
 #include "ProjectDishonored/UI/PlayerHUD.h"
 #include "PlayerCharacter.generated.h"
 
@@ -17,7 +18,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHealthChangedSignature);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEnergyChangedSignature);
 
 UCLASS()
-class PROJECTDISHONORED_API APlayerCharacter : public ACharacter
+class PROJECTDISHONORED_API APlayerCharacter : public ACharacter, public IHideableInterface
 {
 	GENERATED_BODY()
 
@@ -144,9 +145,6 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	USceneComponent* TakedownRoot;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	UCapsuleComponent* HidingTrigger;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool CanMove = true;
@@ -165,9 +163,6 @@ protected:
 	bool IsInProne;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool IsSprinting;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	bool IsHidden;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool PerformTakedownMove;
@@ -263,6 +258,12 @@ protected:
 
 	UPROPERTY(BlueprintAssignable, BlueprintReadOnly)
 	FOnEnergyChangedSignature OnEnergyChanged;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TArray<UCapsuleComponent*> DetectableCapsules;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	int HiddenCapsulesCount;
 	
 public:
 	virtual void Tick(float _DeltaTime) override;
@@ -274,12 +275,10 @@ public:
 	USpringArmComponent* GetSpringArm() const { return SpringArm; }
 	UCameraComponent* GetCamera() const { return Camera; }
 	USceneComponent* GetTakedownRoot() const { return TakedownRoot; }
-	UCapsuleComponent* GetHidingTrigger() const { return HidingTrigger; }
 
 	// Readonly Status Booleans
 	bool GetIsInProne() const { return IsInProne; }
 	bool GetIsSprinting() const { return IsSprinting; }
-	bool GetIsHidden() const { return IsHidden; }
 	bool GetIsInTakedown() const { return IsInTakedown; }
 	bool GetCanPerformTakedown() const { return CanPerformTakedown; }
 	bool GetIsEating() const { return IsEating; }
@@ -307,9 +306,6 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void SetConsumeWidgetVisible(bool _Visible);
 
-	UFUNCTION(BlueprintCallable)
-	void SetHiddenStatus(bool _Status);
-
 	UFUNCTION()
 	void AddAgentForTakedown(AAgentCharacter* _Agent);
 	UFUNCTION()
@@ -319,6 +315,13 @@ public:
 	void AddDeadAgent(AAgentCharacter* _Agent);
 	UFUNCTION()
 	void RemoveDeadAgent(AAgentCharacter* _Agent);
+
+	virtual USceneComponent* GetCapsulesRoot() override { return Mesh; }
+	
+	virtual TArray<UCapsuleComponent*>& GetDetectableCapsules() override { return DetectableCapsules; }
+
+	virtual int GetHiddenCapsulesCount() override { return HiddenCapsulesCount; }
+	virtual void ChangeHiddenCapsulesCount(int _Delta) override { HiddenCapsulesCount += _Delta; }
 	
 	//
 	

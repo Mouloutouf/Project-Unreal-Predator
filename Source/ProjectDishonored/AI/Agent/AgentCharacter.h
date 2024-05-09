@@ -12,7 +12,7 @@ class AAgentController;
 class APath;
 
 UCLASS()
-class PROJECTDISHONORED_API AAgentCharacter : public ACharacter
+class PROJECTDISHONORED_API AAgentCharacter : public ACharacter, public IHideableInterface
 {
 	GENERATED_BODY()
 
@@ -89,6 +89,12 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FName BodyCenterBone;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TArray<UCapsuleComponent*> DetectableCapsules;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	int HiddenCapsulesCount;
 	
 public:
 	virtual void Tick(float _DeltaTime) override;
@@ -110,6 +116,13 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void Death(FVector _HitDirection);
 
+	virtual USceneComponent* GetCapsulesRoot() override { return Mesh; }
+	
+	virtual TArray<UCapsuleComponent*>& GetDetectableCapsules() override { return DetectableCapsules; }
+
+	virtual int GetHiddenCapsulesCount() override { return HiddenCapsulesCount; }
+	virtual void ChangeHiddenCapsulesCount(int _Delta) override { HiddenCapsulesCount += _Delta; }
+	
 	//
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)

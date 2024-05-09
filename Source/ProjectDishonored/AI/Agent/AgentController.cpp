@@ -190,7 +190,7 @@ void AAgentController::SetDetectionRate(int _PlayerState)
 
 bool AAgentController::TryDetectDeadBody(AAgentCharacter* _AgentCharacter)
 {
-	if (_AgentCharacter->GetIsDead() == false || DeadAgentsCache.Contains(_AgentCharacter->GetName()) == true)
+	if (_AgentCharacter->GetIsDead() == false || _AgentCharacter->IsHidden() == true || DeadAgentsCache.Contains(_AgentCharacter->GetName()) == true)
 		return false;
 
 	// TODO Arbitrary distance value cannot have that
@@ -219,7 +219,7 @@ void AAgentController::UpdatePerception(AActor* _Actor, FAIStimulus _Stimulus)
 
 void AAgentController::UpdatePlayerDetected()
 {
-	bool PlayerDetectedStatus = PlayerSensed == true && PlayerReference->GetIsDead() == false && PlayerReference->GetIsHidden() == false;
+	bool PlayerDetectedStatus = PlayerSensed == true && PlayerReference->GetIsDead() == false && PlayerReference->IsHidden() == false;
 	if (PlayerDetected != PlayerDetectedStatus)
 	{
 		ControlledAgent->IsPlayerDetected = PlayerDetected = PlayerDetectedStatus;

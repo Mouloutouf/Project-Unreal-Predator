@@ -1,9 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "HidingTriggerBox.h"
 
-#include "ProjectDishonored/Player/PlayerCharacter.h"
+#include "ProjectDishonored/Gameplay/Character/HideableInterface.h"
 
 AHidingTriggerBox::AHidingTriggerBox()
 {
@@ -21,13 +20,15 @@ void AHidingTriggerBox::CheckExit(AActor* _ExitActor, UPrimitiveComponent* _Exit
 
 void AHidingTriggerBox::Check(AActor* _Actor, const UPrimitiveComponent* _Component, const bool _Enter)
 {
-	APlayerCharacter* PlayerCharacter = dynamic_cast<APlayerCharacter*>(_Actor);
-	
-	if (PlayerCharacter == nullptr)
+	IHideableInterface* HideableActor = Cast<IHideableInterface>(_Actor);
+	if (HideableActor == nullptr)
 		return;
 
-	if ((UPrimitiveComponent*)PlayerCharacter->GetHidingTrigger() != _Component)
-		return;
+	for (auto* DetectableCapsule : HideableActor->GetDetectableCapsules())
+	{
+		if (DetectableCapsule != _Component)
+			continue;
 
-	PlayerCharacter->SetHiddenStatus(_Enter);
+		HideableActor->ChangeHiddenCapsulesCount(_Enter ? 1 : -1);
+	}
 }

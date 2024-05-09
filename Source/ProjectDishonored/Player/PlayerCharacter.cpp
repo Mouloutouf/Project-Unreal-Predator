@@ -25,9 +25,6 @@ APlayerCharacter::APlayerCharacter()
 	
 	TakedownRoot = CreateDefaultSubobject<USceneComponent>(TEXT("TakedownRoot"));
 	TakedownRoot->SetupAttachment(RootComponent);
-
-	HidingTrigger = CreateDefaultSubobject<UCapsuleComponent>(TEXT("HidingTrigger"));
-	HidingTrigger->SetupAttachment(RootComponent);
 }
 
 void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -40,6 +37,8 @@ void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	GatherDetectableCapsules();
+	
 	CanPerformJump = CanPerformCrouch = CanPerformSprint = CanPerformTakedown = true;
 
 	ControllerReference = dynamic_cast<APlayerController*>(GetController());
@@ -471,11 +470,6 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* _PlayerInputCo
 
 	_PlayerInputComponent->BindAction(TEXT("Kill"), IE_Pressed, this, &APlayerCharacter::TakedownPressed);
 	_PlayerInputComponent->BindAction(TEXT("Eat"), IE_Pressed, this, &APlayerCharacter::EatPressed);
-}
-
-void APlayerCharacter::SetHiddenStatus(bool _Status)
-{
-	IsHidden = _Status;
 }
 
 void APlayerCharacter::AddAgentForTakedown(AAgentCharacter* _Agent)
