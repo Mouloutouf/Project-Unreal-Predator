@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "ProjectDishonored/AI/Navigation/PathPointInfo.h"
+#include "ProjectDishonored/Gameplay/Items/Weapon.h"
 #include "ProjectDishonored/Player/PlayerCharacter.h"
 #include "AgentCharacter.generated.h"
 
@@ -46,10 +47,8 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void TryDeathByProjectile(AActor* _Other);
 
-	FVector GetBodyCenterLocation() const
-	{
-		return BodyCenterBone.IsNone() == false ? Mesh->GetBoneLocation(BodyCenterBone) : GetActorLocation();
-	}
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void TrySetAgentWeapon();
 	
 	//
 	
@@ -89,12 +88,17 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FName BodyCenterBone;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FName HeadCenterBone;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TArray<UCapsuleComponent*> DetectableCapsules;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	int HiddenCapsulesCount;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	AWeapon* Weapon;
 	
 public:
 	virtual void Tick(float _DeltaTime) override;
@@ -116,6 +120,18 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void Death(FVector _HitDirection);
 
+	UFUNCTION(BlueprintCallable)
+	FVector GetBodyCenterLocation() const
+	{
+		return BodyCenterBone.IsNone() == false ? Mesh->GetBoneLocation(BodyCenterBone) : GetActorLocation();
+	}
+
+	UFUNCTION(BlueprintCallable)
+	FVector GetHeadCenterLocation() const
+	{
+		return HeadCenterBone.IsNone() == false ? Mesh->GetBoneLocation(HeadCenterBone) : GetActorLocation();
+	}
+	
 	virtual USceneComponent* GetCapsulesRoot() override { return Mesh; }
 	
 	virtual TArray<UCapsuleComponent*>& GetDetectableCapsules() override { return DetectableCapsules; }

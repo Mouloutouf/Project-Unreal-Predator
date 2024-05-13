@@ -3,16 +3,27 @@
 #include "Gun.h"
 
 #include "Kismet/KismetSystemLibrary.h"
-#include "ProjectDishonored/ProjectDishonored.h"
+#include "ProjectDishonored/AI/Agent/AgentCharacter.h"
 #include "ProjectDishonored/Player/PlayerCharacter.h"
-
 
 AGun::AGun()
 {
+	PrimaryActorTick.bCanEverTick = true;
+	
 	SetRootComponent(CreateDefaultSubobject<USceneComponent>(TEXT("DefaultRoot")));
 	
 	FireRoot = CreateDefaultSubobject<USceneComponent>(TEXT("FireRoot"));
 	FireRoot->SetupAttachment(RootComponent);
+}
+
+void AGun::BeginPlay()
+{
+	Super::BeginPlay();
+
+	CurrentAmmo = MaxAmmo;
+	CurrentFiringMode = DefaultFiringMode;
+	
+	CanShoot = true;
 }
 
 void AGun::TryFire()
@@ -25,26 +36,29 @@ void AGun::TryFire()
 	
 	Fire();
 
-	// TODO Fire Feedback
+	FireFeedback();
 }
 
 void AGun::Fire()
 {
 	FVector ShootLocation = CurrentShootTarget != nullptr ? CurrentShootTarget->GetActorLocation() : CurrentShootLocation;
+	FVector StartLocation = AgentOwner != nullptr ? AgentOwner->GetHeadCenterLocation() : FireRoot->GetComponentLocation();
 	
 	FHitResult OutHit;
-	bool HitStatus = UKismetSystemLibrary::LineTraceSingle(GetWorld(), FireRoot->GetComponentLocation(), ShootLocation,
-		UEngineTypes::ConvertToTraceType(HIT_COLLISION_CHANNEL), true, TArray<AActor*>(), EDrawDebugTrace::None, OutHit, true);
+	bool HitStatus = UKismetSystemLibrary::LineTraceSingle(GetWorld(), StartLocation, ShootLocation,
+		UEngineTypes::ConvertToTraceType(ECC_Camera), true, {AgentOwner}, EDrawDebugTrace::None, OutHit, true);
 	if (HitStatus == true)
 	{
 		APlayerCharacter* PlayerCharacter = dynamic_cast<APlayerCharacter*>(OutHit.Component->GetOwner());
 		if (UKismetSystemLibrary::IsValid(PlayerCharacter) == true && PlayerCharacter->GetIsDead() == false)
 		{
-			// Damage Player
+			PlayerCharacter->ChangeHealth(-Damage);
 		}
 	}
 
 	CurrentAmmo--;
+	
+	CurrentFireCount++;
 }
 
 void AGun::SetShootTarget(AActor* _Target)
@@ -68,6 +82,7 @@ void AGun::Shoot()
 		else
 		{
 			IsShooting = true;
+			CurrentTimeSinceLastFire = FireRate;
 		}
 	}
 }
@@ -80,7 +95,7 @@ void AGun::StopShoot()
 
 void AGun::Reload()
 {
-	//
+	// TODO
 }
 
 void AGun::ChangeFiringMode(FiringMode _NewFiringMode)
@@ -102,7 +117,6 @@ void AGun::Tick(float _DeltaTime)
 		if (CurrentTimeSinceLastFire >= FireRate)
 		{
 			CurrentTimeSinceLastFire = 0;
-			CurrentFireCount++;
 			
 			TryFire();
 		}

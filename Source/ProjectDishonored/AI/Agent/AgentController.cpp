@@ -269,6 +269,9 @@ void AAgentController::Tick(float _DeltaTime)
 
 void AAgentController::Initialize()
 {
+	Blackboard->SetValueAsFloat("WaitTimeBeforeShoot", WaitBeforeShoot);
+	Blackboard->SetValueAsFloat("WaitTimeAfterShoot", WaitAfterShoot);
+	
 	ControlledAgent->CurrentSuspicionLevel = SuspicionLevel = 0;
 	UpdateSuspicion();
 

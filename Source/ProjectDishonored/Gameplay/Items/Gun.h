@@ -21,11 +21,16 @@ public:
 	AGun();
 
 protected:
+	virtual void BeginPlay() override;
+	
 	UFUNCTION()
 	void TryFire();
 
 	UFUNCTION()
 	void Fire();
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void FireFeedback();
 
 	//
 	
@@ -33,9 +38,9 @@ protected:
 	USceneComponent* FireRoot;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float MaxAmmo;
+	int MaxAmmo;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	float CurrentAmmo;
+	int CurrentAmmo;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float Range;

@@ -4,8 +4,7 @@
 
 AWeapon::AWeapon()
 {
- 	// This actor does not use the Tick Update
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 }
 
 void AWeapon::BeginPlay()

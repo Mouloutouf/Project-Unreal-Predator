@@ -42,6 +42,11 @@ void AAgentCharacter::BeginPlay()
 	ControllerReference->Initialize();
 	
 	bUseControllerRotationYaw = false;
+
+	TrySetAgentWeapon();
+	
+	if (Weapon != nullptr)
+		Weapon->SetWeaponOwner(this);
 }
 
 void AAgentCharacter::ChangeCharacterSpeed(float _NewSpeed)

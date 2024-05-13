@@ -152,6 +152,11 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	TSet<FString> DeadAgentsCache;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float WaitBeforeShoot;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float WaitAfterShoot;
+	
 public:
 	// Called every frame
 	virtual void Tick(float _DeltaTime) override;

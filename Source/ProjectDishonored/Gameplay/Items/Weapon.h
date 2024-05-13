@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "Weapon.generated.h"
 
+class AAgentCharacter;
+
 UCLASS()
 class PROJECTDISHONORED_API AWeapon : public AActor
 {
@@ -15,9 +17,13 @@ public:
 	AWeapon();
 
 protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	AAgentCharacter* AgentOwner;
+	
 	virtual void BeginPlay() override;
 
 public:
 	virtual void Tick(float DeltaTime) override;
 
+	void SetWeaponOwner(AAgentCharacter* _AgentOwner) { AgentOwner = _AgentOwner; }
 };
