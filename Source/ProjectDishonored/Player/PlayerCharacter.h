@@ -17,6 +17,8 @@ class AAgentCharacter;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHealthChangedSignature);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEnergyChangedSignature);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerDeathSignature);
+
 UCLASS()
 class PROJECTDISHONORED_API APlayerCharacter : public ACharacter, public IHideableInterface
 {
@@ -253,12 +255,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float TakedownRagdollForce = 10000;
 
-	UPROPERTY(BlueprintAssignable, BlueprintReadOnly)
-	FOnHealthChangedSignature OnHealthChanged;
-
-	UPROPERTY(BlueprintAssignable, BlueprintReadOnly)
-	FOnEnergyChangedSignature OnEnergyChanged;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TArray<UCapsuleComponent*> DetectableCapsules;
 
@@ -324,6 +320,15 @@ public:
 	virtual void ChangeHiddenCapsulesCount(int _Delta) override { HiddenCapsulesCount += _Delta; }
 	
 	//
+
+	UPROPERTY(BlueprintAssignable, BlueprintReadOnly)
+	FOnHealthChangedSignature OnHealthChanged;
+
+	UPROPERTY(BlueprintAssignable, BlueprintReadOnly)
+	FOnEnergyChangedSignature OnEnergyChanged;
+
+	UPROPERTY(BlueprintAssignable, BlueprintReadOnly)
+	FOnPlayerDeathSignature OnPlayerDeath;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	TSet<AAgentCharacter*> AgentsInTakedownRange;

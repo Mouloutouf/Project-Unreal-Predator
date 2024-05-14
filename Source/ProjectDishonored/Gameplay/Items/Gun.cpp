@@ -2,6 +2,7 @@
 
 #include "Gun.h"
 
+#include "DrawDebugHelpers.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "ProjectDishonored/AI/Agent/AgentCharacter.h"
 #include "ProjectDishonored/Player/PlayerCharacter.h"
@@ -28,7 +29,7 @@ void AGun::BeginPlay()
 
 void AGun::TryFire()
 {
-	if (CurrentAmmo <= 0 || (CurrentFiringMode == FiringMode::Burst && CurrentFireCount > BurstFireAmount))
+	if (CurrentAmmo <= 0 || (CurrentFiringMode == FiringMode::Burst && CurrentFireCount >= BurstFireAmount))
 	{
 		StopShoot();
 		return;
@@ -43,6 +44,8 @@ void AGun::Fire()
 {
 	FVector ShootLocation = CurrentShootTarget != nullptr ? CurrentShootTarget->GetActorLocation() : CurrentShootLocation;
 	FVector StartLocation = AgentOwner != nullptr ? AgentOwner->GetHeadCenterLocation() : FireRoot->GetComponentLocation();
+
+	bool PlayerHit = false;
 	
 	FHitResult OutHit;
 	bool HitStatus = UKismetSystemLibrary::LineTraceSingle(GetWorld(), StartLocation, ShootLocation,
@@ -52,9 +55,11 @@ void AGun::Fire()
 		APlayerCharacter* PlayerCharacter = dynamic_cast<APlayerCharacter*>(OutHit.Component->GetOwner());
 		if (UKismetSystemLibrary::IsValid(PlayerCharacter) == true && PlayerCharacter->GetIsDead() == false)
 		{
+			PlayerHit = true;
 			PlayerCharacter->ChangeHealth(-Damage);
 		}
 	}
+	DrawDebugLine(GetWorld(), StartLocation, ShootLocation, PlayerHit ? FColor::Red : FColor::Blue, false, 2);
 
 	CurrentAmmo--;
 	

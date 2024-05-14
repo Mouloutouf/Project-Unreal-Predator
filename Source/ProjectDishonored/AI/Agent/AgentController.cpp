@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "ProjectDishonored/Gameplay/Items/Gun.h"
 
 AAgentController::AAgentController()
 {
@@ -131,6 +132,12 @@ void AAgentController::SetLurePosition(FVector _Position)
 	InLureState = true;
 }
 
+void AAgentController::ClearLurePosition()
+{
+	Blackboard->ClearValue("CurrentLurePosition");
+	InLureState = false;
+}
+
 bool AAgentController::TrySetChasedPlayer()
 {
 	if (SuspicionLevel != 2)
@@ -146,9 +153,14 @@ bool AAgentController::TryClearChasedPlayer()
 	if (SuspicionLevel >= 2)
 		return false;
 
-	Blackboard->ClearValue("DetectedPlayer");
+	ClearChasedPlayer();
 
 	return true;
+}
+
+void AAgentController::ClearChasedPlayer()
+{
+	Blackboard->ClearValue("DetectedPlayer");
 }
 
 void AAgentController::IncreaseTimeline()
@@ -251,6 +263,14 @@ void AAgentController::OnDetectionTimelineFinished()
 	}
 }
 
+void AAgentController::OnPlayerDeath()
+{
+	TryChangeSuspicion(0);
+
+	ClearChasedPlayer();
+	ClearLurePosition();
+}
+
 void AAgentController::Tick(float _DeltaTime)
 {
 	Super::Tick(_DeltaTime);
@@ -269,6 +289,8 @@ void AAgentController::Tick(float _DeltaTime)
 
 void AAgentController::Initialize()
 {
+	PlayerReference->OnPlayerDeath.AddDynamic(this, &AAgentController::OnPlayerDeath);
+	
 	Blackboard->SetValueAsFloat("WaitTimeBeforeShoot", WaitBeforeShoot);
 	Blackboard->SetValueAsFloat("WaitTimeAfterShoot", WaitAfterShoot);
 	

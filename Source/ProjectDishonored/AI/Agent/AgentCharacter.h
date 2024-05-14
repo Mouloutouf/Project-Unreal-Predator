@@ -49,6 +49,9 @@ protected:
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void TrySetAgentWeapon();
+
+	UFUNCTION()
+	void TryStopShooting() const;
 	
 	//
 	
@@ -131,6 +134,8 @@ public:
 	{
 		return HeadCenterBone.IsNone() == false ? Mesh->GetBoneLocation(HeadCenterBone) : GetActorLocation();
 	}
+
+	AWeapon* GetWeapon() const { return Weapon; }
 	
 	virtual USceneComponent* GetCapsulesRoot() override { return Mesh; }
 	

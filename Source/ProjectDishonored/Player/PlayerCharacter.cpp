@@ -3,7 +3,6 @@
 #include "PlayerCharacter.h"
 
 #include "Blueprint/WidgetBlueprintLibrary.h"
-#include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -327,6 +326,11 @@ void APlayerCharacter::Die()
 	
 	SetActorEnableCollision(false);
 
+	OnPlayerDeath.Broadcast();
+	
+	SetTakedownWidgetVisible(false);
+	SetConsumeWidgetVisible(false);
+	
 	HUDReference->ShouldDrawReticle = false;
 	
 	HUDReference->ShowGameOver();

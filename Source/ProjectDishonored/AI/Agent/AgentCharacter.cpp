@@ -13,6 +13,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "ProjectDishonored/ProjectDishonored.h"
 #include "ProjectDishonored/AI/Navigation/Path.h"
+#include "ProjectDishonored/Gameplay/Items/Gun.h"
 #include "ProjectDishonored/Player/Projectile.h"
 
 // Sets default values
@@ -205,10 +206,23 @@ void AAgentCharacter::TryDeathByProjectile(AActor* _Other)
 		Projectile->Destroy();
 }
 
+void AAgentCharacter::TryStopShooting() const
+{
+	AGun* AgentGun = dynamic_cast<AGun*>(Weapon);
+	if (AgentGun != nullptr)
+	{
+		AgentGun->CanShoot = false;
+		AgentGun->StopShoot();
+	}
+}
+
 void AAgentCharacter::Tick(float _DeltaTime)
 {
 	Super::Tick(_DeltaTime);
 
+	if (PlayerReference->GetIsDead() == true)
+		return;
+	
 	if (IsDead == false)
 		CheckPlayerCanTakedown();
 	else
@@ -229,6 +243,8 @@ void AAgentCharacter::Death(FVector _HitDirection)
 {
 	IsDead = true;
 
+	TryStopShooting();
+	
 	CharacterMovement->DisableMovement();
 	CapsuleComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	

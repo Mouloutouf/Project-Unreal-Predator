@@ -65,9 +65,6 @@ protected:
 	FVector CurrentShootLocation;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	AActor* CurrentShootTarget;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	bool CanShoot = true;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool IsShooting = false;
@@ -99,4 +96,9 @@ public:
 	void ResetFiringMode();
 
 	virtual void Tick(float _DeltaTime) override;
+
+	//
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool CanShoot = true;
 };

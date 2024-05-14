@@ -52,11 +52,15 @@ protected:
 	bool TrySetLurePosition(FVector _Position);
 	UFUNCTION(BlueprintCallable)
 	void SetLurePosition(FVector _Position);
+	UFUNCTION(BlueprintCallable)
+	void ClearLurePosition();
 
 	UFUNCTION(BlueprintCallable)
 	bool TrySetChasedPlayer();
 	UFUNCTION(BlueprintCallable)
 	bool TryClearChasedPlayer();
+	UFUNCTION(BlueprintCallable)
+	void ClearChasedPlayer();
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void SetAimedStatus(bool _Status);
@@ -90,6 +94,9 @@ protected:
 
 	UFUNCTION(BlueprintCallable)
 	void OnDetectionTimelineFinished();
+
+	UFUNCTION()
+	void OnPlayerDeath();
 	
 	//
 
