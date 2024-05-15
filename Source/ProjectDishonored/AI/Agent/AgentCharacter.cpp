@@ -33,9 +33,11 @@ void AAgentCharacter::BeginPlay()
 		Weapon->SetWeaponOwner(this);
 	}
 	
-	// TODO Check for Path nullptr
-	IsPathForward = Path->Forward;
-	ResetPath();
+	if (UKismetSystemLibrary::IsValid(Path) == true)
+	{
+		IsPathForward = Path->Forward;
+		ResetPath();
+	}
 	
 	APawn* PlayerPawn = UGameplayStatics::GetPlayerController(this, 0)->GetPawn();
 	PlayerReference = dynamic_cast<APlayerCharacter*>(PlayerPawn);
