@@ -16,14 +16,11 @@
 #include "ProjectDishonored/Gameplay/Items/Gun.h"
 #include "ProjectDishonored/Player/Projectile.h"
 
-// Sets default values
 AAgentCharacter::AAgentCharacter()
 {
- 	// Set this character to call Tick() every frame. You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 }
 
-// Called when the game starts or when spawned
 void AAgentCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -47,12 +44,9 @@ void AAgentCharacter::BeginPlay()
 	TrySetAgentWeapon();
 	
 	if (Weapon != nullptr)
+	{
 		Weapon->SetWeaponOwner(this);
-}
-
-void AAgentCharacter::ChangeCharacterSpeed(float _NewSpeed)
-{
-	CharacterMovement->MaxWalkSpeed = _NewSpeed;
+	}
 }
 
 void AAgentCharacter::Stop()
@@ -70,17 +64,25 @@ void AAgentCharacter::SetNextDestination()
 		switch (Path->PathBehavior)
 		{
 		case EPathBehavior::Stop:
-			Stop();
-			return;
+			{
+				Stop();
+				return;
+			}
 		case EPathBehavior::Loop:
-			ResetPath();
-			break;
+			{
+				ResetPath();
+				break;
+			}
 		case EPathBehavior::Reverse:
-			IsPathForward = !IsPathForward;
-			NextInPath();
-			break;
+			{
+				IsPathForward = !IsPathForward;
+				NextInPath();
+				break;
+			}
 		default:
-			break;
+			{
+				break;
+			}
 		}
 	}
 
@@ -98,35 +100,33 @@ void AAgentCharacter::SetDestinationInfo(FPathPointInfo _PathPointInfo)
 void AAgentCharacter::NextInPath()
 {
 	if (IsPathForward == true)
+	{
 		CurrentPathIndex++;
-	
-	else CurrentPathIndex--;
+	}
+	else
+	{
+		CurrentPathIndex--;
+	}
 }
 
 void AAgentCharacter::ResetPath()
 {
 	if (IsPathForward == true)
+	{
 		CurrentPathIndex = 0;
-	
-	else CurrentPathIndex = Path->PathPoints.Max() - 1;
+	}
+	else
+	{
+		CurrentPathIndex = Path->PathPoints.Max() - 1;
+	}
 }
 
-bool AAgentCharacter::CheckPathEnd()
+bool AAgentCharacter::CheckPathEnd() const
 {
 	if (IsPathForward == true)
 		return CurrentPathIndex >= Path->PathPoints.Max();
 	
 	return CurrentPathIndex < 0;
-}
-
-void AAgentCharacter::UpdatePlayerCanTakedown(bool _CanTakedown)
-{
-	bool CanPerformTakedown = _CanTakedown && PlayerReference->GetCanPerformTakedown();
-	
-	if (CanPerformTakedown)
-		PlayerReference->AddAgentForTakedown(this);
-	else
-		PlayerReference->RemoveAgentFromTakedown(this);
 }
 
 void AAgentCharacter::CheckPlayerCanTakedown()
@@ -147,7 +147,6 @@ void AAgentCharacter::CheckPlayerCanTakedown()
 			UEngineTypes::ConvertToTraceType(HIT_COLLISION_CHANNEL), true, TArray<AActor*>({ this }), EDrawDebugTrace::None, HitResult, true);
 		if (Hit == true)
 		{
-			//GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::White, FString::Printf(TEXT("HIT OBJECT %s"), *HitResult.Component->GetOwner()->GetName()));
 			HasLineOfTakedown = HitResult.Component->GetOwner() == PlayerReference;
 		}
 		
@@ -161,13 +160,18 @@ void AAgentCharacter::CheckPlayerCanTakedown()
 	}
 }
 
-// TODO Should create some sort of generic interaction component which allows an object to expose an interaction to the player
-void AAgentCharacter::UpdatePlayerCanConsume(bool _CanConsume)
+void AAgentCharacter::UpdatePlayerCanTakedown(bool _CanTakedown)
 {
-	if (_CanConsume)
-		PlayerReference->AddDeadAgent(this);
+	bool CanPerformTakedown = _CanTakedown && PlayerReference->GetCanPerformTakedown();
+	
+	if (CanPerformTakedown)
+	{
+		PlayerReference->AddAgentForTakedown(this);
+	}
 	else
-		PlayerReference->RemoveDeadAgent(this);
+	{
+		PlayerReference->RemoveAgentFromTakedown(this);
+	}
 }
 
 // TODO Add a check for if the player is actually looking in the direction of the body
@@ -177,7 +181,6 @@ void AAgentCharacter::CheckPlayerCanConsume()
 		return;
 
 	bool InsideRange = FVector::Distance(GetBodyCenterLocation(), PlayerReference->GetActorLocation()) <= PlayerReference->ConsumeRadius;
-
 	bool InsideHeight = UKismetMathLibrary::Abs(PlayerReference->GetActorLocation().Z - GetBodyCenterLocation().Z) <= PlayerReference->ConsumeHeightRange;
 
 	if ((InsideRange && InsideHeight) != CanPlayerConsume)
@@ -187,23 +190,17 @@ void AAgentCharacter::CheckPlayerCanConsume()
 	}
 }
 
-void AAgentCharacter::TryDeathByProjectile(AActor* _Other)
+// TODO Should create some sort of generic interaction component which allows an object to expose an interaction to the player
+void AAgentCharacter::UpdatePlayerCanConsume(bool _CanConsume)
 {
-	if (IsDead == true)
-		return;
-
-	AProjectile* Projectile = dynamic_cast<AProjectile*>(_Other);
-	if (UKismetSystemLibrary::IsValid(Projectile) == false)
-		return;
-
-	if (Projectile->GetIsMoving() == false)
-		return;
-
-	FVector HitDirection = Projectile->GetRootComponent()->GetComponentRotation().Vector() * HitForce;
-	Death(HitDirection);
-
-	if (UKismetSystemLibrary::IsValid(Projectile) == true)
-		Projectile->Destroy();
+	if (_CanConsume)
+	{
+		PlayerReference->AddDeadAgent(this);
+	}
+	else
+	{
+		PlayerReference->RemoveDeadAgent(this);
+	}
 }
 
 void AAgentCharacter::TryStopShooting() const
@@ -224,9 +221,18 @@ void AAgentCharacter::Tick(float _DeltaTime)
 		return;
 	
 	if (IsDead == false)
+	{
 		CheckPlayerCanTakedown();
+	}
 	else
+	{
 		CheckPlayerCanConsume();
+	}
+}
+
+void AAgentCharacter::ChangeCharacterSpeed(float _NewSpeed)
+{
+	CharacterMovement->MaxWalkSpeed = _NewSpeed;
 }
 
 void AAgentCharacter::EnableCharacter(bool _Enable)
@@ -236,7 +242,30 @@ void AAgentCharacter::EnableCharacter(bool _Enable)
 	Mesh->bPauseAnims = _Enable == false;
 
 	if (_Enable == false)
+	{
 		Stop();
+	}
+}
+
+void AAgentCharacter::TryDeathByProjectile(AActor* _Other)
+{
+	if (IsDead == true)
+		return;
+
+	AProjectile* Projectile = dynamic_cast<AProjectile*>(_Other);
+	if (UKismetSystemLibrary::IsValid(Projectile) == false)
+		return;
+
+	if (Projectile->GetIsMoving() == false)
+		return;
+
+	FVector HitDirection = Projectile->GetRootComponent()->GetComponentRotation().Vector() * HitForce;
+	Death(HitDirection);
+
+	if (UKismetSystemLibrary::IsValid(Projectile) == true)
+	{
+		Projectile->Destroy();
+	}
 }
 
 void AAgentCharacter::Death(FVector _HitDirection)
@@ -250,7 +279,9 @@ void AAgentCharacter::Death(FVector _HitDirection)
 	
 	Mesh->SetSimulatePhysics(true);
 	for (FName BoneToHit : BonesToHitOnDeath)
+	{
 		Mesh->AddImpulse(_HitDirection, BoneToHit);
+	}
 
 	PlayerReference->RemoveAgentFromTakedown(this);
 

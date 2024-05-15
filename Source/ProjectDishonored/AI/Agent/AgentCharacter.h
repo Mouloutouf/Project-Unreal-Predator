@@ -28,26 +28,26 @@ protected:
 	
 	UFUNCTION(BlueprintCallable)
 	void SetNextDestination();
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION()
 	void SetDestinationInfo(FPathPointInfo _PathPointInfo);
 	
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION()
 	void NextInPath();
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION()
 	void ResetPath();
-	UFUNCTION(BlueprintPure, BlueprintCallable)
-	bool CheckPathEnd();
+	UFUNCTION(BlueprintPure)
+	bool CheckPathEnd() const;
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION()
 	void CheckPlayerCanTakedown();
-
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION()
+	void UpdatePlayerCanTakedown(bool _CanTakedown);
+	UFUNCTION()
 	void CheckPlayerCanConsume();
+	UFUNCTION()
+	void UpdatePlayerCanConsume(bool _CanConsume);
 
-	UFUNCTION(BlueprintCallable)
-	void TryDeathByProjectile(AActor* _Other);
-
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	UFUNCTION(BlueprintImplementableEvent)
 	void TrySetAgentWeapon();
 
 	UFUNCTION()
@@ -56,7 +56,7 @@ protected:
 	//
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	bool IsDead;
+	bool IsDead = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FName BlackboardKeyDeathState;
@@ -67,21 +67,21 @@ protected:
 	APlayerCharacter* PlayerReference;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	bool IsPathForward;
+	bool IsPathForward = false;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	APathPoint* CurrentPoint;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	int CurrentPathIndex;
+	int CurrentPathIndex = 0;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	bool AtDestination;
+	bool AtDestination = false;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	bool CanPlayerTakedown;
+	bool CanPlayerTakedown = false;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	bool CanPlayerConsume;
+	bool CanPlayerConsume = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float HitForce = 10000;
@@ -98,31 +98,28 @@ protected:
 	TArray<UCapsuleComponent*> DetectableCapsules;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	int HiddenCapsulesCount;
+	int HiddenCapsulesCount = 0;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	AWeapon* Weapon;
+	AWeapon* Weapon = nullptr;
 	
 public:
 	virtual void Tick(float _DeltaTime) override;
 
-	bool GetIsDead() const { return IsDead; }
-
 	UFUNCTION(BlueprintCallable)
 	void ChangeCharacterSpeed(float _NewSpeed);
 
-	UFUNCTION(BlueprintCallable)
-	void UpdatePlayerCanTakedown(bool _CanTakedown);
-
-	UFUNCTION(BlueprintCallable)
-	void UpdatePlayerCanConsume(bool _CanConsume);
-	
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable) // DEPRECATED
 	void EnableCharacter(bool _Enable);
 
+	UFUNCTION(BlueprintCallable) // DEPRECATED
+	void TryDeathByProjectile(AActor* _Other);
+	
 	UFUNCTION(BlueprintCallable)
 	void Death(FVector _HitDirection);
 
+	bool GetIsDead() const { return IsDead; }
+	
 	UFUNCTION(BlueprintCallable)
 	FVector GetBodyCenterLocation() const
 	{
@@ -138,9 +135,7 @@ public:
 	AWeapon* GetWeapon() const { return Weapon; }
 	
 	virtual USceneComponent* GetCapsulesRoot() override { return Mesh; }
-	
 	virtual TArray<UCapsuleComponent*>& GetDetectableCapsules() override { return DetectableCapsules; }
-
 	virtual int GetHiddenCapsulesCount() override { return HiddenCapsulesCount; }
 	virtual void ChangeHiddenCapsulesCount(int _Delta) override { HiddenCapsulesCount += _Delta; }
 	
@@ -149,7 +144,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	APath* Path;
 
-	bool IsPlayerDetected;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool IsPlayerDetected = false;
 	
-	int CurrentSuspicionLevel;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	int CurrentSuspicionLevel = 0;
 };
