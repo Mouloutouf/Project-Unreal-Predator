@@ -6,11 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
-#include "ProjectDishonored/Gameplay/Items/Gun.h"
-
-AAgentController::AAgentController()
-{
-}
+#include "ProjectDishonored/Utility/MathUtility.h"
 
 void AAgentController::BeginPlay()
 {
@@ -21,27 +17,7 @@ void AAgentController::BeginPlay()
 	CurrentDetectionRate =  BaseDetectionRate;
 }
 
-// TODO Review this method
-float AAgentController::AngleBetweenVectors(FVector _FirstVector, FVector _SecondVector)
-{
-	_FirstVector = _FirstVector.GetSafeNormal();
-	_SecondVector = _SecondVector.GetSafeNormal();
-
-	FVector Cross = FVector::CrossProduct(_FirstVector, _SecondVector);
-	float Dot = FVector::DotProduct(_FirstVector, _SecondVector);
-
-	float Angle = UKismetMathLibrary::DegAcos(Dot);
-
-	return Cross.Z > 0 ? Angle : -Angle;
-}
-
-FVector AAgentController::GetPositionAtDistance(FVector _ClosestPosition, FVector _FurthestPosition, float _Distance)
-{
-	FVector Direction = (_FurthestPosition - _ClosestPosition).GetSafeNormal();
-	return _ClosestPosition + (Direction * _Distance);
-}
-
-void AAgentController::UpdateDetectionMeterAngle()
+void AAgentController::UpdateDetectionMeterAngle() const
 {
 	if (UKismetSystemLibrary::IsValid(DetectionMeterWidget) == false)
 		return;
@@ -49,7 +25,7 @@ void AAgentController::UpdateDetectionMeterAngle()
 	FVector AgentPositionFromPlayer = ControlledAgent->GetActorLocation() - PlayerReference->GetActorLocation();
 	FVector PlayerDirection = PlayerReference->GetCameraForward();
 	
-	float Angle = -AngleBetweenVectors(AgentPositionFromPlayer, PlayerDirection);
+	float Angle = -MathUtility::AngleBetweenVectors(AgentPositionFromPlayer, PlayerDirection);
 	DetectionMeterWidget->SetRenderTransformAngle(Angle);
 }
 
@@ -72,38 +48,38 @@ float AAgentController::GetDetectionDecreaseRate()
 	return 1 / DecreaseRate;
 }
 
-bool AAgentController::TryIncreaseSuspicion()
+void AAgentController::IncreaseSuspicion()
 {
-	return TryChangeSuspicion(SuspicionLevel + 1);
+	ChangeSuspicion(SuspicionLevel + 1);
 }
 
-bool AAgentController::TryDecreaseSuspicion()
+void AAgentController::DecreaseSuspicion()
 {
-	return TryChangeSuspicion(SuspicionLevel - 1);
+	ChangeSuspicion(SuspicionLevel - 1);
 }
 
-bool AAgentController::TryChangeSuspicion(int _Value)
+void AAgentController::ChangeSuspicion(int _Value)
 {
 	if (_Value < 0 || _Value > 2)
-		return false;
+		return;
 
-	ControlledAgent->CurrentSuspicionLevel = SuspicionLevel = _Value;
-	UpdateSuspicion();
+	SuspicionLevel = _Value;
+	ControlledAgent->CurrentSuspicionLevel = SuspicionLevel;
 
-	SetAimedStatus(_Value > 0);
-	
-	return true;
+	OnSuspicionChanged();
 }
 
-void AAgentController::UpdateSuspicion()
+void AAgentController::OnSuspicionChanged()
 {
+	SetAimedStatus(SuspicionLevel > 0);
+	
 	UpdateDisplayedSuspicionUI();
 
 	float Speed = SuspicionLevel == 0 ? PatrolSpeed : SuspicionLevel == 1 ? LureSpeed : ChaseSpeed;
 	ControlledAgent->ChangeCharacterSpeed(Speed);
 }
 
-bool AAgentController::TryUpdateLurePosition()
+bool AAgentController::TrySetPlayerAsLurePosition()
 {
 	if (SuspicionLevel != 1)
 		return false;
@@ -138,7 +114,7 @@ void AAgentController::ClearLurePosition()
 	InLureState = false;
 }
 
-bool AAgentController::TrySetChasedPlayer()
+bool AAgentController::TrySetChasedPlayer() const
 {
 	if (SuspicionLevel != 2)
 		return false;
@@ -148,9 +124,9 @@ bool AAgentController::TrySetChasedPlayer()
 	return true;
 }
 
-bool AAgentController::TryClearChasedPlayer()
+bool AAgentController::TryClearChasedPlayer() const
 {
-	if (SuspicionLevel >= 2)
+	if (SuspicionLevel == 2)
 		return false;
 
 	ClearChasedPlayer();
@@ -158,7 +134,7 @@ bool AAgentController::TryClearChasedPlayer()
 	return true;
 }
 
-void AAgentController::ClearChasedPlayer()
+void AAgentController::ClearChasedPlayer() const
 {
 	Blackboard->ClearValue("DetectedPlayer");
 }
@@ -177,6 +153,29 @@ void AAgentController::DecreaseTimeline()
 		return;
 
 	OnTimelineRestart(1);
+}
+
+void AAgentController::OnDetectionTimelineFinished()
+{
+	if (PlayerDetected == true)
+	{
+		IncreaseSuspicion();
+		
+		if (TrySetChasedPlayer() == true)
+		{
+			IncreaseTimeline();
+		}
+	}
+	else
+	{
+		DecreaseSuspicion();
+		SetDetectionVisibility(false);
+		
+		if (TryClearChasedPlayer() == true)
+		{
+			DecreaseTimeline();
+		}
+	}
 }
 
 bool AAgentController::TryUpdateDetectionRate()
@@ -200,13 +199,45 @@ void AAgentController::SetDetectionRate(int _PlayerState)
 	CurrentDetectionRate = _PlayerState == -1 ? CrouchDetectionRate : SuspicionLevel == 1 ? RunDetectionRate : BaseDetectionRate;
 }
 
+void AAgentController::UpdatePerception(AActor* _Actor, FAIStimulus _Stimulus)
+{
+	if (ControlledAgent->GetIsDead() == true)
+		return;
+
+	if ((AActor*)PlayerReference == _Actor)
+	{
+		PlayerSensed = _Stimulus.WasSuccessfullySensed();
+	}
+	
+	AAgentCharacter* OtherAgent = dynamic_cast<AAgentCharacter*>(_Actor);
+	if (OtherAgent != nullptr)
+	{
+		TryDetectDeadBody(OtherAgent);
+	}
+}
+
+void AAgentController::UpdatePlayerDetected()
+{
+	bool PlayerDetectedStatus = PlayerSensed == true && PlayerReference->GetIsDead() == false && PlayerReference->IsHidden() == false;
+	if (PlayerDetected != PlayerDetectedStatus)
+	{
+		PlayerDetected = PlayerDetectedStatus;
+		ControlledAgent->IsPlayerDetected = PlayerDetected;
+		
+		if (PlayerDetected == true)
+		{
+			SetDetectionVisibility(true);
+		}
+	}
+}
+
 bool AAgentController::TryDetectDeadBody(AAgentCharacter* _AgentCharacter)
 {
 	if (_AgentCharacter->GetIsDead() == false || _AgentCharacter->IsHidden() == true || DeadAgentsCache.Contains(_AgentCharacter->GetName()) == true)
 		return false;
 
 	// TODO Arbitrary distance value cannot have that
-	FVector LurePosition = GetPositionAtDistance(_AgentCharacter->GetActorLocation(), ControlledAgent->GetActorLocation(), 100);
+	FVector LurePosition = MathUtility::GetPositionAtDistance(_AgentCharacter->GetActorLocation(), ControlledAgent->GetActorLocation(), 100);
 	TrySetLurePosition(LurePosition);
 
 	DeadAgentsCache.Emplace(_AgentCharacter->GetName());
@@ -216,56 +247,9 @@ bool AAgentController::TryDetectDeadBody(AAgentCharacter* _AgentCharacter)
 	return true;
 }
 
-void AAgentController::UpdatePerception(AActor* _Actor, FAIStimulus _Stimulus)
-{
-	if (ControlledAgent->GetIsDead() == true)
-		return;
-
-	if ((AActor*)PlayerReference == _Actor)
-		PlayerSensed = _Stimulus.WasSuccessfullySensed();
-	
-	AAgentCharacter* OtherAgent = dynamic_cast<AAgentCharacter*>(_Actor);
-	if (OtherAgent != nullptr)
-		TryDetectDeadBody(OtherAgent);
-}
-
-void AAgentController::UpdatePlayerDetected()
-{
-	bool PlayerDetectedStatus = PlayerSensed == true && PlayerReference->GetIsDead() == false && PlayerReference->IsHidden() == false;
-	if (PlayerDetected != PlayerDetectedStatus)
-	{
-		ControlledAgent->IsPlayerDetected = PlayerDetected = PlayerDetectedStatus;
-		if (PlayerDetected == true)
-			SetDetectionVisibility(true);
-	}
-}
-
-void AAgentController::OnDetectionTimelineFinished()
-{
-	if (PlayerDetected == true)
-	{
-		bool Success = TryIncreaseSuspicion();
-		
-		TrySetChasedPlayer();
-		
-		if (Success)
-			IncreaseTimeline();
-	}
-	else
-	{
-		bool Success = TryDecreaseSuspicion();
-		
-		TryClearChasedPlayer();
-		SetDetectionVisibility(false);
-		
-		if (Success)
-			DecreaseTimeline();
-	}
-}
-
 void AAgentController::OnPlayerDeath()
 {
-	TryChangeSuspicion(0);
+	ChangeSuspicion(0);
 
 	ClearChasedPlayer();
 	ClearLurePosition();
@@ -280,14 +264,14 @@ void AAgentController::Tick(float _DeltaTime)
 
 	UpdatePlayerDetected();
 	
-	TryUpdateLurePosition();
+	TrySetPlayerAsLurePosition();
 	TryUpdateDetectionRate();
 	
 	UpdateDetectionMeterAngle();
 	UpdateDetectionTimeline();
 }
 
-void AAgentController::Initialize()
+void AAgentController::Init()
 {
 	PlayerReference->OnPlayerDeath.AddDynamic(this, &AAgentController::OnPlayerDeath);
 	
@@ -295,7 +279,7 @@ void AAgentController::Initialize()
 	Blackboard->SetValueAsFloat("WaitTimeAfterShoot", WaitAfterShoot);
 	
 	ControlledAgent->CurrentSuspicionLevel = SuspicionLevel = 0;
-	UpdateSuspicion();
+	OnSuspicionChanged();
 
 	SetTimelinePlayRate(1 / MinSuspicionIncreaseRate);
 }

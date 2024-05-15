@@ -37,7 +37,7 @@ void AAgentCharacter::BeginPlay()
 	ResetPath();
 
 	ControllerReference->RunBehavior();
-	ControllerReference->Initialize();
+	ControllerReference->Init();
 	
 	bUseControllerRotationYaw = false;
 

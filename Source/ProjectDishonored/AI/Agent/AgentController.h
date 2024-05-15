@@ -14,86 +14,76 @@ class PROJECTDISHONORED_API AAgentController : public AAIController
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this character's properties
-	AAgentController();
+	AAgentController() = default;
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	
-	// TODO Put these methods in a Utility script
-	UFUNCTION(BlueprintCallable)
-	float AngleBetweenVectors(FVector _FirstVector, FVector _SecondVector);
-	UFUNCTION(BlueprintPure, BlueprintCallable)
-	FVector GetPositionAtDistance(FVector _ClosestPosition, FVector _FurthestPosition, float _Distance);
-
-	UFUNCTION(BlueprintCallable)
-	void UpdateDetectionMeterAngle();
+	UFUNCTION()
+	void UpdateDetectionMeterAngle() const;
 
 	UFUNCTION(BlueprintPure, BlueprintCallable)
 	float GetDetectionIncreaseRate();
 	UFUNCTION(BlueprintPure, BlueprintCallable)
 	float GetDetectionDecreaseRate();
 
-	UFUNCTION(BlueprintCallable)
-	bool TryIncreaseSuspicion();
-	UFUNCTION(BlueprintCallable)
-	bool TryDecreaseSuspicion();
 	UFUNCTION()
-	bool TryChangeSuspicion(int _Value);
-	UFUNCTION(BlueprintCallable)
-	void UpdateSuspicion();
+	void IncreaseSuspicion();
+	UFUNCTION()
+	void DecreaseSuspicion();
+	UFUNCTION()
+	void ChangeSuspicion(int _Value);
+	UFUNCTION()
+	void OnSuspicionChanged();
+	
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void UpdateDisplayedSuspicionUI();
 
-	UFUNCTION(BlueprintCallable)
-	bool TryUpdateLurePosition();
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION()
+	bool TrySetPlayerAsLurePosition();
+	UFUNCTION()
 	bool TrySetLurePosition(FVector _Position);
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION()
 	void SetLurePosition(FVector _Position);
 	UFUNCTION(BlueprintCallable)
 	void ClearLurePosition();
 
-	UFUNCTION(BlueprintCallable)
-	bool TrySetChasedPlayer();
-	UFUNCTION(BlueprintCallable)
-	bool TryClearChasedPlayer();
-	UFUNCTION(BlueprintCallable)
-	void ClearChasedPlayer();
+	UFUNCTION()
+	bool TrySetChasedPlayer() const;
+	UFUNCTION()
+	bool TryClearChasedPlayer() const;
+	UFUNCTION()
+	void ClearChasedPlayer() const;
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void SetAimedStatus(bool _Status);
 	
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION()
 	void IncreaseTimeline();
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION()
 	void DecreaseTimeline();
 
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
-	void OnTimelineRestart(float _NewTime);
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	UFUNCTION(BlueprintImplementableEvent)
 	void SetTimelinePlayRate(float _NewRate);
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnTimelineRestart(float _NewTime);
+	UFUNCTION(BlueprintImplementableEvent)
+	void UpdateDetectionTimeline();
 	
 	UFUNCTION(BlueprintCallable)
+	void OnDetectionTimelineFinished();
+	
+	UFUNCTION()
 	bool TryUpdateDetectionRate();
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION()
 	void SetDetectionRate(int _PlayerState);
 
 	UFUNCTION(BlueprintCallable)
-	bool TryDetectDeadBody(AAgentCharacter* _AgentCharacter);
-
-	UFUNCTION(BlueprintCallable)
 	void UpdatePerception(AActor* _Actor, FAIStimulus _Stimulus);
-
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION()
 	void UpdatePlayerDetected();
-	
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
-	void UpdateDetectionTimeline();
-
-	UFUNCTION(BlueprintCallable)
-	void OnDetectionTimelineFinished();
+	UFUNCTION()
+	bool TryDetectDeadBody(AAgentCharacter* _AgentCharacter);
 
 	UFUNCTION()
 	void OnPlayerDeath();
@@ -104,13 +94,13 @@ protected:
 	AAgentCharacter* ControlledAgent;
 
 	// TODO Make the Suspicion Level an Enum
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	int SuspicionLevel;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	int SuspicionLevel = 0;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	bool PlayerSensed;
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	bool PlayerDetected;
+	bool PlayerSensed = false;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool PlayerDetected = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float MaxLureIncreaseRate = 0.0001;
@@ -132,7 +122,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	UUserWidget* DetectionMeterWidget;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	bool IsDetectionMeterVisible;
+	bool IsDetectionMeterVisible = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float PatrolSpeed = 200;
@@ -141,7 +131,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float ChaseSpeed = 400;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	float CurrentDetectionRate;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float BaseDetectionRate = 1;
@@ -150,30 +140,29 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float CrouchDetectionRate = 2;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	int CurrentPlayerState;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	bool InLureState;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool InLureState = false;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TSet<FString> DeadAgentsCache;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float WaitBeforeShoot;
+	float WaitBeforeShoot = 0.5;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float WaitAfterShoot;
+	float WaitAfterShoot = 2;
 	
 public:
-	// Called every frame
 	virtual void Tick(float _DeltaTime) override;
 	
-	void Initialize();
+	void Init();
 
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	UFUNCTION(BlueprintImplementableEvent)
 	void RunBehavior();
 
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	UFUNCTION(BlueprintImplementableEvent)
 	void SetDetectionVisibility(bool _Visibility);
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void SetDetectionProgress(float _Progress);
