@@ -30,37 +30,33 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION()
 	void EnableAbilities(bool _Enable);
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION()
 	void EnableSprint(bool _Enable);
-
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION()
 	void ActivateSprint(bool _Activate);
 	
-	UFUNCTION(BlueprintCallable)
-	void SetProne(float _VignetteIntensity, float _NewHeight);
-
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION()
+	void SetProne(float _VignetteIntensity, float _NewHeight) const;
+	UFUNCTION()
 	void ActivateProne(bool _Activate, bool _ShouldAnimate);
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
-	void CrouchAnimation(bool _Activate);
+	void ProneAnimation(bool _Activate);
 	
-	UFUNCTION(BlueprintCallable)
-	void SetSpeed(float _NewSpeed);
+	UFUNCTION()
+	void SetSpeed(float _NewSpeed) const;
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION()
 	void SetHealth(float _NewHealth);
-
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION()
 	void SetEnergy(float _NewEnergy);
 	
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	UFUNCTION(BlueprintImplementableEvent)
 	void UpdateHealthUI();
-
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	UFUNCTION(BlueprintImplementableEvent)
 	void UpdateEnergyUI();
 	
 	UFUNCTION(BlueprintCallable)
@@ -68,50 +64,34 @@ protected:
 
 	UFUNCTION()
 	void TryTakedown();
-	
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION()
 	void InitiateTakedown();
-
-	UFUNCTION(BlueprintCallable)
-	void TakedownKill();
-	
+	UFUNCTION()
+	void InitiateKill();
+	UFUNCTION(BlueprintImplementableEvent)
+	void KillAnimation(float _Rate);
 	UFUNCTION(BlueprintCallable)
 	void FinishTakedown();
 
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
-	void KillAnimation(float _Rate);
-
 	UFUNCTION()
 	void TryConsumeBody();
-	
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION()
 	void InitiateConsumeBody();
-
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	UFUNCTION(BlueprintImplementableEvent)
 	void ConsumeAnimation(float _Rate);
-
 	UFUNCTION(BlueprintCallable)
 	void FinishConsumeBody();
 	
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION()
 	void TryMakeNoise();
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION()
 	void UpdateRaycastAndReticle();
 
-	UFUNCTION(BlueprintCallable)
-	void DecreaseEnergy();
+	UFUNCTION()
+	void UpdateEnergyAndHealth();
 
-	UFUNCTION(BlueprintCallable)
-	void DecreaseHealth();
-
-	UFUNCTION(BlueprintCallable)
-	void CheckEnergy();
-
-	UFUNCTION(BlueprintCallable)
-	void TryDecreaseHealth();
-
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION()
 	void Die();
 	
 private:
@@ -155,7 +135,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool CanPerformJump = true;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	bool CanPerformCrouch = true;
+	bool CanPerformProne = true;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool CanPerformSprint = true;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
@@ -180,7 +160,7 @@ protected:
 	float CrouchingHeight;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float NormalSpeed;
+	float NormalSpeed = 100;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float SlowSpeed;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -203,14 +183,14 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	float HealthDecreaseCurrentTime;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	bool ShouldDecreaseHealth;
+	bool HealthDecreaseStatus;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float TakedownDetectedHealthDecrease;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float MaxEnergy;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	float CurrentEnergy;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -239,10 +219,10 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	FVector CurrentHitPosition;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	AAgentCharacter* CurrentAgentInTakedownRange;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	AAgentCharacter* CurrentDeadAgentInRange;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -262,10 +242,9 @@ protected:
 	int HiddenCapsulesCount;
 	
 public:
-	virtual void Tick(float _DeltaTime) override;
-
-	// Input Binding
 	virtual void SetupPlayerInputComponent(UInputComponent* _PlayerInputComponent) override;
+	
+	virtual void Tick(float _DeltaTime) override;
 
 	// Readonly Components
 	USpringArmComponent* GetSpringArm() const { return SpringArm; }
@@ -279,6 +258,7 @@ public:
 	bool GetCanPerformTakedown() const { return CanPerformTakedown; }
 	bool GetIsEating() const { return IsEating; }
 	bool GetIsDead() const { return IsDead; }
+	bool GetHealthDecreaseStatus() const { return HealthDecreaseStatus; }
 
 	FVector GetCameraForward() const
 	{
@@ -290,32 +270,27 @@ public:
 		return CharacterMovement->Velocity.Size() > 0;
 	}
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION()
 	void ChangeHealth(float _HealthChange);
-
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION()
 	void ChangeEnergy(float _EnergyChange);
 	
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	UFUNCTION(BlueprintImplementableEvent)
 	void SetTakedownWidgetVisible(bool _Visible);
-
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	UFUNCTION(BlueprintImplementableEvent)
 	void SetConsumeWidgetVisible(bool _Visible);
 
 	UFUNCTION()
 	void AddAgentForTakedown(AAgentCharacter* _Agent);
 	UFUNCTION()
-	void RemoveAgentFromTakedown(AAgentCharacter* _Agent);
-
+	void RemoveAgentFromTakedown(const AAgentCharacter* _Agent);
 	UFUNCTION()
 	void AddDeadAgent(AAgentCharacter* _Agent);
 	UFUNCTION()
-	void RemoveDeadAgent(AAgentCharacter* _Agent);
+	void RemoveDeadAgent(const AAgentCharacter* _Agent);
 
 	virtual USceneComponent* GetCapsulesRoot() override { return Mesh; }
-	
 	virtual TArray<UCapsuleComponent*>& GetDetectableCapsules() override { return DetectableCapsules; }
-
 	virtual int GetHiddenCapsulesCount() override { return HiddenCapsulesCount; }
 	virtual void ChangeHiddenCapsulesCount(int _Delta) override { HiddenCapsulesCount += _Delta; }
 	
@@ -330,9 +305,9 @@ public:
 	UPROPERTY(BlueprintAssignable, BlueprintReadOnly)
 	FOnPlayerDeathSignature OnPlayerDeath;
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TSet<AAgentCharacter*> AgentsInTakedownRange;
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TSet<AAgentCharacter*> DeadAgentsInRange;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)

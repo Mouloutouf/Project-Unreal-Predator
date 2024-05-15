@@ -10,10 +10,8 @@
 #include "ProjectDishonored/ProjectDishonored.h"
 #include "ProjectDishonored/AI/Agent/AgentCharacter.h"
 
-// Sets default values
 APlayerCharacter::APlayerCharacter()
 {
- 	// Set this character to call Tick() every frame. You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
@@ -26,19 +24,13 @@ APlayerCharacter::APlayerCharacter()
 	TakedownRoot->SetupAttachment(RootComponent);
 }
 
-void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-}
-
-// Called when the game starts or when spawned
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
 	GatherDetectableCapsules();
 	
-	CanPerformJump = CanPerformCrouch = CanPerformSprint = CanPerformTakedown = true;
+	CanPerformJump = CanPerformProne = CanPerformSprint = CanPerformTakedown = true;
 
 	ControllerReference = dynamic_cast<APlayerController*>(GetController());
 	
@@ -69,7 +61,7 @@ void APlayerCharacter::EnableAbilities(bool _Enable)
 		StopJumping();
 		ActivateSprint(false);
 	}
-	CanLook = CanMove = CanPerformCrouch = CanPerformJump = CanPerformSprint = _Enable;
+	CanLook = CanMove = CanPerformProne = CanPerformJump = CanPerformSprint = _Enable;
 }
 
 void APlayerCharacter::EnableSprint(bool _Enable)
@@ -83,12 +75,14 @@ void APlayerCharacter::EnableSprint(bool _Enable)
 void APlayerCharacter::ActivateSprint(bool _Activate)
 {
 	if (IsInProne == true && _Activate == true)
+	{
 		ActivateProne(false, true);
+	}
 
 	EnableSprint(_Activate);
 }
 
-void APlayerCharacter::SetProne(float _VignetteIntensity, float _NewHeight)
+void APlayerCharacter::SetProne(float _VignetteIntensity, float _NewHeight) const
 {
 	FVector CameraLocation = Camera->GetRelativeLocation();
 	CameraLocation.Z = _NewHeight;
@@ -107,12 +101,16 @@ void APlayerCharacter::ActivateProne(bool _Activate, bool _ShouldAnimate)
 	SetSpeed(IsInProne ? ProneSpeed : NormalSpeed);
 
 	if (_ShouldAnimate == false)
+	{
 		SetProne(0, StandingHeight);
+	}
 	else
-		CrouchAnimation(_Activate);
+	{
+		ProneAnimation(_Activate);
+	}
 }
 
-void APlayerCharacter::SetSpeed(float _NewSpeed)
+void APlayerCharacter::SetSpeed(float _NewSpeed) const
 {
 	GetCharacterMovement()->MaxWalkSpeed = _NewSpeed;
 }
@@ -124,7 +122,9 @@ void APlayerCharacter::SetHealth(float _NewHealth)
 	OnHealthChanged.Broadcast();
 
 	if (CurrentHealth <= 0)
+	{
 		Die();
+	}
 }
 
 void APlayerCharacter::ChangeHealth(float _HealthChange)
@@ -162,7 +162,9 @@ void APlayerCharacter::TryTakedown()
 	}
 
 	if (UKismetSystemLibrary::IsValid(CurrentAgentInTakedownRange) == true)
+	{
 		InitiateTakedown();
+	}
 }
 
 void APlayerCharacter::InitiateTakedown()
@@ -176,7 +178,7 @@ void APlayerCharacter::InitiateTakedown()
 	ControllerReference->SetControlRotation(TakedownCameraRotation);
 }
 
-void APlayerCharacter::TakedownKill()
+void APlayerCharacter::InitiateKill()
 {
 	PerformTakedownMove = false;
 
@@ -188,7 +190,9 @@ void APlayerCharacter::TakedownKill()
 		KillAnimation(KillAnimRate);
 	}
 	else
+	{
 		FinishTakedown();
+	}
 }
 
 void APlayerCharacter::FinishTakedown()
@@ -196,7 +200,9 @@ void APlayerCharacter::FinishTakedown()
 	CurrentAgentInTakedownRange->Death(CurrentTakedownDirection * TakedownRagdollForce);
 	
 	if (CurrentAgentInTakedownRange->CurrentSuspicionLevel == 2)
+	{
 		ChangeHealth(-TakedownDetectedHealthDecrease);
+	}
 
 	IsInTakedown = false;
 	EnableAbilities(true);
@@ -221,7 +227,9 @@ void APlayerCharacter::TryConsumeBody()
 	}
 
 	if (UKismetSystemLibrary::IsValid(CurrentDeadAgentInRange) == true)
+	{
 		InitiateConsumeBody();
+	}
 }
 
 void APlayerCharacter::InitiateConsumeBody()
@@ -252,7 +260,10 @@ void APlayerCharacter::FinishConsumeBody()
 void APlayerCharacter::TryMakeNoise()
 {
 	if (IsSprinting == true)
+	{
+		// TODO Debug This
 		UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 0.5f, this);
+	}
 }
 
 void APlayerCharacter::UpdateRaycastAndReticle()
@@ -269,9 +280,13 @@ void APlayerCharacter::UpdateRaycastAndReticle()
 		AAgentCharacter* AgentCharacter = dynamic_cast<AAgentCharacter*>(OutHit.Component->GetOwner());
 
 		if (UKismetSystemLibrary::IsValid(AgentCharacter) == true && AgentCharacter->GetIsDead() == false)
+		{
 			HUDReference->SetReticleRed();
+		}
 		else
+		{
 			HUDReference->SetReticleWhite();
+		}
 	}
 	else
 	{
@@ -280,41 +295,31 @@ void APlayerCharacter::UpdateRaycastAndReticle()
 	}
 }
 
-void APlayerCharacter::DecreaseEnergy()
+void APlayerCharacter::UpdateEnergyAndHealth()
 {
 	float EnergyDecreaseSpeed = GetIsMoving() == true ? EnergyMovementDecreaseSpeed : EnergyImmobileDecreaseSpeed;
 	EnergyDecreaseSpeed *= IsSprinting == true ? EnergySprintDecreaseFactor : 1;
 	
 	ChangeEnergy(-EnergyDecreaseSpeed * UGameplayStatics::GetWorldDeltaSeconds(this));
-}
 
-void APlayerCharacter::DecreaseHealth()
-{
-	ChangeHealth(-MaxHealth / HealthDecreaseSteps);
-}
-
-void APlayerCharacter::CheckEnergy()
-{
-	if (CurrentEnergy <= 0 && ShouldDecreaseHealth == false)
+	if (CurrentEnergy <= 0)
 	{
-		ShouldDecreaseHealth = true;
-		HealthDecreaseCurrentTime = HealthDecreaseWaitTime;
-	}
-	
-	if (CurrentEnergy > 0 && ShouldDecreaseHealth == true)
-		ShouldDecreaseHealth = false;
-}
-
-void APlayerCharacter::TryDecreaseHealth()
-{
-	if (ShouldDecreaseHealth == true)
-	{
-		if (HealthDecreaseCurrentTime >= HealthDecreaseWaitTime)
+		if (HealthDecreaseStatus == false)
 		{
-			DecreaseHealth();
+			HealthDecreaseStatus = true;
 			HealthDecreaseCurrentTime = 0;
 		}
-		HealthDecreaseCurrentTime += UGameplayStatics::GetWorldDeltaSeconds(this);
+		
+		if (HealthDecreaseCurrentTime <= 0)
+		{
+			ChangeHealth(-MaxHealth / HealthDecreaseSteps);
+			HealthDecreaseCurrentTime = HealthDecreaseWaitTime;
+		}
+		HealthDecreaseCurrentTime -= UGameplayStatics::GetWorldDeltaSeconds(this);
+	}
+	else if (HealthDecreaseStatus == true)
+	{
+		HealthDecreaseStatus = false;
 	}
 }
 
@@ -322,7 +327,7 @@ void APlayerCharacter::Die()
 {
 	IsDead = true;
 
-	CanPerformJump = CanPerformCrouch = CanPerformSprint = CanPerformTakedown = false;
+	CanPerformJump = CanPerformProne = CanPerformSprint = CanPerformTakedown = false;
 	
 	SetActorEnableCollision(false);
 
@@ -389,8 +394,10 @@ void APlayerCharacter::LookUp(float _AxisValue)
 
 void APlayerCharacter::JumpPressed()
 {
-	if (CanPerformJump)
-		Jump();
+	if (CanPerformJump == false)
+		return;
+	
+	Jump();
 }
 
 void APlayerCharacter::JumpReleased()
@@ -400,8 +407,10 @@ void APlayerCharacter::JumpReleased()
 
 void APlayerCharacter::SprintPressed()
 {
-	if (CanPerformSprint == true)
-		ActivateSprint(true);
+	if (CanPerformSprint == false)
+		return;
+
+	ActivateSprint(true);
 }
 
 void APlayerCharacter::SprintReleased()
@@ -411,8 +420,10 @@ void APlayerCharacter::SprintReleased()
 
 void APlayerCharacter::PronePressed()
 {
-	if (CanPerformCrouch == true)
-		ActivateProne(IsInProne == false, true);
+	if (CanPerformProne == false)
+		return;
+
+	ActivateProne(IsInProne == false, true);
 }
 
 void APlayerCharacter::TakedownPressed()
@@ -429,27 +440,6 @@ void APlayerCharacter::EatPressed()
 		return;
 
 	TryConsumeBody();
-}
-
-// Called every frame
-void APlayerCharacter::Tick(float _DeltaTime)
-{
-	Super::Tick(_DeltaTime);
-	
-	TryMakeNoise();
-	UpdateRaycastAndReticle();
-
-	DecreaseEnergy();
-	CheckEnergy();
-	TryDecreaseHealth();
-
-	if (PerformTakedownMove == true)
-	{
-		SetActorLocation(GetActorLocation() + CurrentTakedownDirection * TakedownMoveSpeed * UGameplayStatics::GetWorldDeltaSeconds(this));
-
-		if (FVector::Distance(GetActorLocation(), CurrentAgentInTakedownRange->GetActorLocation()) < TakedownAgentOffsetDistance)
-			TakedownKill();
-	}
 }
 
 // Called to bind functionality to input
@@ -476,13 +466,35 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* _PlayerInputCo
 	_PlayerInputComponent->BindAction(TEXT("Eat"), IE_Pressed, this, &APlayerCharacter::EatPressed);
 }
 
+void APlayerCharacter::Tick(float _DeltaTime)
+{
+	Super::Tick(_DeltaTime);
+	
+	UpdateRaycastAndReticle();
+
+	// TODO Decide what to do of this
+	TryMakeNoise();
+
+	UpdateEnergyAndHealth();
+
+	if (PerformTakedownMove == true)
+	{
+		SetActorLocation(GetActorLocation() + CurrentTakedownDirection * TakedownMoveSpeed * UGameplayStatics::GetWorldDeltaSeconds(this));
+
+		if (FVector::Distance(GetActorLocation(), CurrentAgentInTakedownRange->GetActorLocation()) < TakedownAgentOffsetDistance)
+		{
+			InitiateKill();
+		}
+	}
+}
+
 void APlayerCharacter::AddAgentForTakedown(AAgentCharacter* _Agent)
 {
 	AgentsInTakedownRange.Add(_Agent);
 	SetTakedownWidgetVisible(AgentsInTakedownRange.Num() > 0);
 }
 
-void APlayerCharacter::RemoveAgentFromTakedown(AAgentCharacter* _Agent)
+void APlayerCharacter::RemoveAgentFromTakedown(const AAgentCharacter* _Agent)
 {
 	AgentsInTakedownRange.Remove(_Agent);
 	SetTakedownWidgetVisible(AgentsInTakedownRange.Num() > 0);
@@ -494,7 +506,7 @@ void APlayerCharacter::AddDeadAgent(AAgentCharacter* _Agent)
 	SetConsumeWidgetVisible(DeadAgentsInRange.Num() > 0);
 }
 
-void APlayerCharacter::RemoveDeadAgent(AAgentCharacter* _Agent)
+void APlayerCharacter::RemoveDeadAgent(const AAgentCharacter* _Agent)
 {
 	DeadAgentsInRange.Remove(_Agent);
 	SetConsumeWidgetVisible(DeadAgentsInRange.Num() > 0);

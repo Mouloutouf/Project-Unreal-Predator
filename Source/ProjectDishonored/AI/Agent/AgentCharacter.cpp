@@ -230,7 +230,7 @@ void AAgentCharacter::Tick(float _DeltaTime)
 	}
 }
 
-void AAgentCharacter::ChangeCharacterSpeed(float _NewSpeed)
+void AAgentCharacter::ChangeCharacterSpeed(float _NewSpeed) const
 {
 	CharacterMovement->MaxWalkSpeed = _NewSpeed;
 }

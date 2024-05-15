@@ -55,7 +55,7 @@ protected:
 	
 	//
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool IsDead = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -77,10 +77,10 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool AtDestination = false;
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool CanPlayerTakedown = false;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool CanPlayerConsume = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -106,16 +106,16 @@ protected:
 public:
 	virtual void Tick(float _DeltaTime) override;
 
-	UFUNCTION(BlueprintCallable)
-	void ChangeCharacterSpeed(float _NewSpeed);
+	UFUNCTION()
+	void ChangeCharacterSpeed(float _NewSpeed) const;
 
-	UFUNCTION(BlueprintCallable) // DEPRECATED
+	UFUNCTION()
 	void EnableCharacter(bool _Enable);
 
 	UFUNCTION(BlueprintCallable) // DEPRECATED
 	void TryDeathByProjectile(AActor* _Other);
 	
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION()
 	void Death(FVector _HitDirection);
 
 	bool GetIsDead() const { return IsDead; }
