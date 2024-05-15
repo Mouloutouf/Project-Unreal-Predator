@@ -51,7 +51,7 @@ protected:
 	void TrySetAgentWeapon();
 
 	UFUNCTION()
-	void TryStopShooting() const;
+	void StopShooting() const;
 	
 	//
 	
@@ -145,8 +145,8 @@ public:
 	APath* Path;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	bool IsPlayerDetected = false;
+	bool CanSeePlayer = false;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	int CurrentSuspicionLevel = 0;
+	bool IsAttackingPlayer = false;
 };

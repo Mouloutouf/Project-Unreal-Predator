@@ -2,8 +2,10 @@
 
 #include "AgentController.h"
 
+#include "BrainComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Blueprint/UserWidget.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "ProjectDishonored/Utility/MathUtility.h"
@@ -12,9 +14,22 @@ void AAgentController::BeginPlay()
 {
 	Super::BeginPlay();
 
+	APawn* PlayerPawn = UGameplayStatics::GetPlayerController(this, 0)->GetPawn();
+	PlayerReference = dynamic_cast<APlayerCharacter*>(PlayerPawn);
+	
 	ControlledAgent = dynamic_cast<AAgentCharacter*>(GetPawn());
 
 	CurrentDetectionRate =  BaseDetectionRate;
+}
+
+void AAgentController::Stop() const
+{
+	BrainComponent->StopLogic("");
+}
+
+void AAgentController::SetDeathStatus() const
+{
+	Blackboard->SetValueAsBool("Dead State", true);
 }
 
 void AAgentController::UpdateDetectionMeterAngle() const
@@ -29,14 +44,14 @@ void AAgentController::UpdateDetectionMeterAngle() const
 	DetectionMeterWidget->SetRenderTransformAngle(Angle);
 }
 
+// TODO Change this Method
 float AAgentController::GetDetectionIncreaseRate()
 {
 	float MaxIncreaseRate = SuspicionLevel == 0 ? MaxLureIncreaseRate : MaxSuspicionIncreaseRate;
 	float MinIncreaseRate = SuspicionLevel == 0 ? MinLureIncreaseRate : MinSuspicionIncreaseRate;
 	
 	float Distance = FVector::Distance(ControlledAgent->GetActorLocation(), PlayerReference->GetActorLocation());
-	// TODO Arbitrary value what the fuck is this
-	float Alpha = Distance / 1500;
+	float Alpha = Distance / IncreaseRateDistanceRatio;
 	
 	float RateByDistance = UKismetMathLibrary::Lerp(MaxIncreaseRate, MinIncreaseRate, Alpha);
 	return 1 / (RateByDistance * CurrentDetectionRate);
@@ -64,7 +79,8 @@ void AAgentController::ChangeSuspicion(int _Value)
 		return;
 
 	SuspicionLevel = _Value;
-	ControlledAgent->CurrentSuspicionLevel = SuspicionLevel;
+	
+	ControlledAgent->IsAttackingPlayer = SuspicionLevel == 2;
 
 	OnSuspicionChanged();
 }
@@ -222,12 +238,12 @@ void AAgentController::UpdatePlayerDetected()
 	if (PlayerDetected != PlayerDetectedStatus)
 	{
 		PlayerDetected = PlayerDetectedStatus;
-		ControlledAgent->IsPlayerDetected = PlayerDetected;
-		
 		if (PlayerDetected == true)
 		{
 			SetDetectionVisibility(true);
 		}
+
+		ControlledAgent->CanSeePlayer = PlayerDetected;
 	}
 }
 
@@ -236,8 +252,7 @@ bool AAgentController::TryDetectDeadBody(AAgentCharacter* _AgentCharacter)
 	if (_AgentCharacter->GetIsDead() == false || _AgentCharacter->IsHidden() == true || DeadAgentsCache.Contains(_AgentCharacter->GetName()) == true)
 		return false;
 
-	// TODO Arbitrary distance value cannot have that
-	FVector LurePosition = MathUtility::GetPositionAtDistance(_AgentCharacter->GetActorLocation(), ControlledAgent->GetActorLocation(), 100);
+	FVector LurePosition = MathUtility::GetPositionAtDistance(_AgentCharacter->GetActorLocation(), ControlledAgent->GetActorLocation(), StopOffsetFromLurePosition);
 	TrySetLurePosition(LurePosition);
 
 	DeadAgentsCache.Emplace(_AgentCharacter->GetName());
@@ -273,12 +288,14 @@ void AAgentController::Tick(float _DeltaTime)
 
 void AAgentController::Init()
 {
+	Run();
+	
 	PlayerReference->OnPlayerDeath.AddDynamic(this, &AAgentController::OnPlayerDeath);
 	
 	Blackboard->SetValueAsFloat("WaitTimeBeforeShoot", WaitBeforeShoot);
 	Blackboard->SetValueAsFloat("WaitTimeAfterShoot", WaitAfterShoot);
 	
-	ControlledAgent->CurrentSuspicionLevel = SuspicionLevel = 0;
+	SuspicionLevel = 0;
 	OnSuspicionChanged();
 
 	SetTimelinePlayRate(1 / MinSuspicionIncreaseRate);

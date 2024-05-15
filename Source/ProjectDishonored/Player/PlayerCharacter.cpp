@@ -184,9 +184,9 @@ void APlayerCharacter::InitiateKill()
 
 	SetTakedownWidgetVisible(false);
 	
-	if (CurrentAgentInTakedownRange->IsPlayerDetected == true)
+	if (CurrentAgentInTakedownRange->CanSeePlayer == true)
 	{
-		float KillAnimRate = CurrentAgentInTakedownRange->CurrentSuspicionLevel == 2 ? DetectedKillSlowAnimationRate : DetectedKillNormalAnimationRate;
+		float KillAnimRate = CurrentAgentInTakedownRange->IsAttackingPlayer ? DetectedKillSlowAnimationRate : DetectedKillNormalAnimationRate;
 		KillAnimation(KillAnimRate);
 	}
 	else
@@ -199,7 +199,7 @@ void APlayerCharacter::FinishTakedown()
 {
 	CurrentAgentInTakedownRange->Death(CurrentTakedownDirection * TakedownRagdollForce);
 	
-	if (CurrentAgentInTakedownRange->CurrentSuspicionLevel == 2)
+	if (CurrentAgentInTakedownRange->IsAttackingPlayer == true)
 	{
 		ChangeHealth(-TakedownDetectedHealthDecrease);
 	}

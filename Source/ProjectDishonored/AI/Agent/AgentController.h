@@ -92,6 +92,8 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	AAgentCharacter* ControlledAgent;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	APlayerCharacter* PlayerReference;
 
 	// TODO Make the Suspicion Level an Enum
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
@@ -112,6 +114,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float MinSuspicionIncreaseRate = 3;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float IncreaseRateDistanceRatio = 1500; // TODO This should be equal to the detection distance of the Agent
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float LureDecreaseRate = 2;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -146,6 +151,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool InLureState = false;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float StopOffsetFromLurePosition = 100;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TSet<FString> DeadAgentsCache;
 
@@ -160,16 +168,18 @@ public:
 	void Init();
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void RunBehavior();
+	void Run();
+	UFUNCTION()
+	void Stop() const;
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void SetDetectionVisibility(bool _Visibility);
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void SetDetectionProgress(float _Progress);
 
-	// TODO Create an Agent Data class to store data that should be known by both the Agent Controller and Agent Character, and to which both of them can write
+	UFUNCTION()
+	void SetDeathStatus() const;
+	
 	bool GetPlayerDetected() const { return PlayerDetected; }
 	int GetSuspicionLevel() const { return SuspicionLevel; }
-
-	APlayerCharacter* PlayerReference;
 };

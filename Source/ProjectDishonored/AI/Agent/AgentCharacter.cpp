@@ -3,9 +3,7 @@
 #include "AgentCharacter.h"
 
 #include "AgentController.h"
-#include "BrainComponent.h"
 #include "DrawDebugHelpers.h"
-#include "BehaviorTree/BlackboardComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -25,33 +23,32 @@ void AAgentCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	bUseControllerRotationYaw = false;
+	
 	GatherDetectableCapsules();
+
+	TrySetAgentWeapon();
+	if (Weapon != nullptr)
+	{
+		Weapon->SetWeaponOwner(this);
+	}
+	
+	// TODO Check for Path nullptr
+	IsPathForward = Path->Forward;
+	ResetPath();
 	
 	APawn* PlayerPawn = UGameplayStatics::GetPlayerController(this, 0)->GetPawn();
 	PlayerReference = dynamic_cast<APlayerCharacter*>(PlayerPawn);
 
 	ControllerReference = dynamic_cast<AAgentController*>(GetController());
-	ControllerReference->PlayerReference = PlayerReference;
 
-	IsPathForward = Path->Forward;
-	ResetPath();
-
-	ControllerReference->RunBehavior();
 	ControllerReference->Init();
-	
-	bUseControllerRotationYaw = false;
-
-	TrySetAgentWeapon();
-	
-	if (Weapon != nullptr)
-	{
-		Weapon->SetWeaponOwner(this);
-	}
 }
 
+// TODO Make better use of this
 void AAgentCharacter::Stop()
 {
-	ControllerReference->BrainComponent->StopLogic("");
+	ControllerReference->Stop();
 }
 
 void AAgentCharacter::SetNextDestination()
@@ -203,7 +200,7 @@ void AAgentCharacter::UpdatePlayerCanConsume(bool _CanConsume)
 	}
 }
 
-void AAgentCharacter::TryStopShooting() const
+void AAgentCharacter::StopShooting() const
 {
 	AGun* AgentGun = dynamic_cast<AGun*>(Weapon);
 	if (AgentGun != nullptr)
@@ -272,7 +269,7 @@ void AAgentCharacter::Death(FVector _HitDirection)
 {
 	IsDead = true;
 
-	TryStopShooting();
+	StopShooting();
 	
 	CharacterMovement->DisableMovement();
 	CapsuleComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -286,5 +283,5 @@ void AAgentCharacter::Death(FVector _HitDirection)
 	PlayerReference->RemoveAgentFromTakedown(this);
 
 	ControllerReference->SetDetectionVisibility(false);
-	ControllerReference->GetBlackboardComponent()->SetValueAsBool(BlackboardKeyDeathState, true);
+	ControllerReference->SetDeathStatus();
 }
