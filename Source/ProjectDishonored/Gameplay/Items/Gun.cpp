@@ -57,6 +57,7 @@ void AGun::Fire()
 		{
 			PlayerHit = true;
 			PlayerCharacter->ChangeHealth(-Damage);
+			PlayerCharacter->ChangeEnergyOnDamage();
 		}
 	}
 	DrawDebugLine(GetWorld(), StartLocation, ShootLocation, PlayerHit ? FColor::Red : FColor::Blue, false, 2);

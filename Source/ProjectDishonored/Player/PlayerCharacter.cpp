@@ -143,6 +143,11 @@ void APlayerCharacter::ChangeEnergy(float _EnergyChange)
 	SetEnergy(CurrentEnergy + _EnergyChange);
 }
 
+void APlayerCharacter::ChangeEnergyOnDamage()
+{
+	ChangeEnergy(-DamageEnergyDecrease);
+}
+
 void APlayerCharacter::EnableLoadingAnimation(bool _Enable)
 {
 	HUDReference->SetWidgetVisible(_Enable, HUDReference->LoadingAnimationWidget);
@@ -247,6 +252,7 @@ void APlayerCharacter::FinishConsumeBody()
 	CurrentDeadAgentInRange->Destroy();
 
 	ChangeEnergy(ConsumeEnergyIncrease);
+	ChangeHealth(ConsumeHealthIncrease);
 	
 	IsEating = false;
 	EnableAbilities(true);

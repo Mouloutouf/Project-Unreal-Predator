@@ -202,6 +202,11 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float ConsumeEnergyIncrease;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float ConsumeHealthIncrease;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float DamageEnergyDecrease;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	float ControllerXSensitivity;
@@ -274,6 +279,8 @@ public:
 	void ChangeHealth(float _HealthChange);
 	UFUNCTION()
 	void ChangeEnergy(float _EnergyChange);
+	UFUNCTION()
+	void ChangeEnergyOnDamage();
 	
 	UFUNCTION(BlueprintImplementableEvent)
 	void SetTakedownWidgetVisible(bool _Visible);
