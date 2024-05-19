@@ -46,15 +46,6 @@ void AGun::TryFire()
 
 void AGun::Fire()
 {
-	// float SpreadAngle = atan2(SpreadRadius, 100);
-
-	// float RandomAngle = static_cast<float>(rand()) / (2 * PI);
-	// float RandomDistance = static_cast<float>(rand()) / SpreadRadius != 0 ? SpreadRadius : 1;
-	//
-	// FVector RandomOffset = FVector(cos(RandomAngle), 0, sin(RandomAngle)) * RandomDistance;
-	//
-	// FVector ShootLocation = ShootTargetLocation + RandomOffset;
-
 	FVector StartPos = AgentOwner != nullptr ? AgentOwner->GetHeadCenterLocation() : FireRoot->GetComponentLocation();
 	
 	FVector ShootTargetPos = CurrentShootTarget != nullptr ? CurrentShootTarget->GetActorLocation() : CurrentShootLocation;
