@@ -46,6 +46,9 @@ protected:
 	float Range;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float SpreadAngleDegrees = 1;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float Damage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)

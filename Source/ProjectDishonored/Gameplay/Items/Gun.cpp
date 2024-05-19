@@ -2,10 +2,14 @@
 
 #include "Gun.h"
 
+#include <stdlib.h>
+
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "ProjectDishonored/AI/Agent/AgentCharacter.h"
 #include "ProjectDishonored/Player/PlayerCharacter.h"
+
+//#define DEBUG_SHOOT
 
 AGun::AGun()
 {
@@ -42,13 +46,29 @@ void AGun::TryFire()
 
 void AGun::Fire()
 {
-	FVector ShootLocation = CurrentShootTarget != nullptr ? CurrentShootTarget->GetActorLocation() : CurrentShootLocation;
-	FVector StartLocation = AgentOwner != nullptr ? AgentOwner->GetHeadCenterLocation() : FireRoot->GetComponentLocation();
+	// float SpreadAngle = atan2(SpreadRadius, 100);
+
+	// float RandomAngle = static_cast<float>(rand()) / (2 * PI);
+	// float RandomDistance = static_cast<float>(rand()) / SpreadRadius != 0 ? SpreadRadius : 1;
+	//
+	// FVector RandomOffset = FVector(cos(RandomAngle), 0, sin(RandomAngle)) * RandomDistance;
+	//
+	// FVector ShootLocation = ShootTargetLocation + RandomOffset;
+
+	FVector StartPos = AgentOwner != nullptr ? AgentOwner->GetHeadCenterLocation() : FireRoot->GetComponentLocation();
+	
+	FVector ShootTargetPos = CurrentShootTarget != nullptr ? CurrentShootTarget->GetActorLocation() : CurrentShootLocation;
+	FVector ShootLocalPos = ShootTargetPos - StartPos;
+	
+	FVector RandomShootDir =  UKismetMathLibrary::RandomUnitVectorInConeInDegrees(ShootLocalPos.GetSafeNormal(), SpreadAngleDegrees);
+	float MaxLength = std::min(ShootLocalPos.Size(), Range);
+	FVector RandomShootLocalPos = RandomShootDir * MaxLength;
+	FVector RandomShootPos = RandomShootLocalPos + StartPos;
 
 	bool PlayerHit = false;
 	
 	FHitResult OutHit;
-	bool HitStatus = UKismetSystemLibrary::LineTraceSingle(GetWorld(), StartLocation, ShootLocation,
+	bool HitStatus = UKismetSystemLibrary::LineTraceSingle(GetWorld(), StartPos, RandomShootPos,
 		UEngineTypes::ConvertToTraceType(ECC_Camera), true, {AgentOwner}, EDrawDebugTrace::None, OutHit, true);
 	if (HitStatus == true)
 	{
@@ -60,7 +80,13 @@ void AGun::Fire()
 			PlayerCharacter->ChangeEnergyOnDamage();
 		}
 	}
-	DrawDebugLine(GetWorld(), StartLocation, ShootLocation, PlayerHit ? FColor::Red : FColor::Blue, false, 2);
+	
+	DrawDebugLine(GetWorld(), StartPos, RandomShootPos, PlayerHit ? FColor::Red : FColor::Blue, false, 2);
+
+	FVector Up = AgentOwner->GetActorUpVector();
+	FVector Right = UKismetMathLibrary::Cross_VectorVector(ShootLocalPos.GetSafeNormal(), Up);
+	float SpreadAngleRadians = SpreadAngleDegrees * (PI / 180);
+	DrawDebugCircle(GetWorld(), ShootTargetPos, sin(SpreadAngleRadians) * MaxLength, 32, FColor::White, false, 2, 0, 0, Right, Up);
 
 	CurrentAmmo--;
 	
@@ -118,6 +144,22 @@ void AGun::Tick(float _DeltaTime)
 {
 	Super::Tick(_DeltaTime);
 
+#if defined(DEBUG_SHOOT)
+  if (AgentOwner->GetIsDead() == true)
+		return;
+
+	FVector AimDir = CurrentShootTarget != nullptr ? (CurrentShootTarget->GetActorLocation() - AgentOwner->GetActorLocation()).GetSafeNormal() : AgentOwner->GetActorForwardVector();
+	FVector Up = AgentOwner->GetActorUpVector();
+	FVector Right = UKismetMathLibrary::Cross_VectorVector(AimDir, Up);
+
+	float SpreadAngleRadians = SpreadAngleDegrees * (PI / 180);
+	
+	DrawDebugCircle(GetWorld(), AgentOwner->GetActorLocation() + AimDir * 100, sin(SpreadAngleRadians) * 100, 32, FColor::White, false, -1, 0, 0, Right, Up);
+	DrawDebugCircle(GetWorld(), AgentOwner->GetActorLocation() + AimDir * 600, sin(SpreadAngleRadians) * 600, 32, FColor::Yellow, false, -1, 0, 0, Right, Up);
+	DrawDebugCircle(GetWorld(), AgentOwner->GetActorLocation() + AimDir * 1000, sin(SpreadAngleRadians) * 1000, 32, FColor::Orange, false, -1, 0, 0, Right, Up);
+	DrawDebugCircle(GetWorld(), AgentOwner->GetActorLocation() + AimDir * 1500, sin(SpreadAngleRadians) * 1500, 32, FColor::Red, false, -1, 0, 0, Right, Up);
+#endif
+	
 	if (IsShooting == true)
 	{
 		if (CurrentTimeSinceLastFire >= FireRate)

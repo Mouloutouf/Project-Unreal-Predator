@@ -194,11 +194,11 @@ protected:
 	float CurrentEnergy;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float EnergyImmobileDecreaseSpeed = 0.27;
+	float EnergyImmobileDecreaseSpeed = 0.25;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float EnergyMovementDecreaseSpeed = 1.67;
+	float EnergyMovementDecreaseSpeed = 10;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float EnergySprintDecreaseFactor = 10;
+	float EnergySprintDecreaseSpeed = 20;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float ConsumeEnergyIncrease;

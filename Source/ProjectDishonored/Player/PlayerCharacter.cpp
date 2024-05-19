@@ -303,8 +303,7 @@ void APlayerCharacter::UpdateRaycastAndReticle()
 
 void APlayerCharacter::UpdateEnergyAndHealth()
 {
-	float EnergyDecreaseSpeed = GetIsMoving() == true ? EnergyMovementDecreaseSpeed : EnergyImmobileDecreaseSpeed;
-	EnergyDecreaseSpeed *= IsSprinting == true ? EnergySprintDecreaseFactor : 1;
+	float EnergyDecreaseSpeed = GetIsMoving() == true ? (IsSprinting == true ? EnergySprintDecreaseSpeed : EnergyMovementDecreaseSpeed) : EnergyImmobileDecreaseSpeed;
 	
 	ChangeEnergy(-EnergyDecreaseSpeed * UGameplayStatics::GetWorldDeltaSeconds(this));
 
