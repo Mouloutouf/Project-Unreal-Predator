@@ -44,7 +44,7 @@ void AAgentCharacter::BeginPlay()
 
 	ControllerReference = dynamic_cast<AAgentController*>(GetController());
 
-	ControllerReference->Init();
+	ControllerReference->InitBehavior();
 }
 
 // TODO Make better use of this

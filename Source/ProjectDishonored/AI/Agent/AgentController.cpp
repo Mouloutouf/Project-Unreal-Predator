@@ -16,10 +16,15 @@ void AAgentController::BeginPlay()
 
 	APawn* PlayerPawn = UGameplayStatics::GetPlayerController(this, 0)->GetPawn();
 	PlayerReference = dynamic_cast<APlayerCharacter*>(PlayerPawn);
+
+	PlayerReference->OnPlayerDeath.AddDynamic(this, &AAgentController::OnPlayerDeath);
 	
 	ControlledAgent = dynamic_cast<AAgentCharacter*>(GetPawn());
 
+	ChangeSuspicion(0);
+	
 	CurrentDetectionRate =  BaseDetectionRate;
+	SetTimelinePlayRate(1 / MinSuspicionIncreaseRate);
 }
 
 void AAgentController::Stop() const
@@ -282,16 +287,10 @@ void AAgentController::Tick(float _DeltaTime)
 	UpdateDetectionTimeline();
 }
 
-void AAgentController::Init()
+void AAgentController::InitBehavior()
 {
 	Run();
 	
-	PlayerReference->OnPlayerDeath.AddDynamic(this, &AAgentController::OnPlayerDeath);
-	
 	Blackboard->SetValueAsFloat("WaitTimeBeforeShoot", WaitBeforeShoot);
 	Blackboard->SetValueAsFloat("WaitTimeAfterShoot", WaitAfterShoot);
-	
-	ChangeSuspicion(0);
-
-	SetTimelinePlayRate(1 / MinSuspicionIncreaseRate);
 }

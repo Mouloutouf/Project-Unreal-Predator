@@ -165,7 +165,7 @@ protected:
 public:
 	virtual void Tick(float _DeltaTime) override;
 	
-	void Init();
+	void InitBehavior();
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void Run();
