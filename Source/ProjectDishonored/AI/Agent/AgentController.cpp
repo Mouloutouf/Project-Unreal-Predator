@@ -47,8 +47,8 @@ void AAgentController::UpdateDetectionMeterAngle() const
 // TODO Change this Method
 float AAgentController::GetDetectionIncreaseRate()
 {
-	float MaxIncreaseRate = SuspicionLevel == 0 ? MaxLureIncreaseRate : MaxSuspicionIncreaseRate;
-	float MinIncreaseRate = SuspicionLevel == 0 ? MinLureIncreaseRate : MinSuspicionIncreaseRate;
+	float MaxIncreaseRate = SuspicionLevel == 0 ? MaxSuspicionIncreaseRate : MaxLureIncreaseRate;
+	float MinIncreaseRate = SuspicionLevel == 0 ? MinSuspicionIncreaseRate : MinLureIncreaseRate;
 	
 	float Distance = FVector::Distance(ControlledAgent->GetActorLocation(), PlayerReference->GetActorLocation());
 	float Alpha = Distance / IncreaseRateDistanceRatio;
@@ -176,21 +176,17 @@ void AAgentController::OnDetectionTimelineFinished()
 	if (PlayerDetected == true)
 	{
 		IncreaseSuspicion();
+		TrySetChasedPlayer();
 		
-		if (TrySetChasedPlayer() == true)
-		{
-			IncreaseTimeline();
-		}
+		IncreaseTimeline();
 	}
 	else
 	{
 		DecreaseSuspicion();
 		SetDetectionVisibility(false);
+		TryClearChasedPlayer();
 		
-		if (TryClearChasedPlayer() == true)
-		{
-			DecreaseTimeline();
-		}
+		DecreaseTimeline();
 	}
 }
 
@@ -295,8 +291,7 @@ void AAgentController::Init()
 	Blackboard->SetValueAsFloat("WaitTimeBeforeShoot", WaitBeforeShoot);
 	Blackboard->SetValueAsFloat("WaitTimeAfterShoot", WaitAfterShoot);
 	
-	SuspicionLevel = 0;
-	OnSuspicionChanged();
+	ChangeSuspicion(0);
 
 	SetTimelinePlayRate(1 / MinSuspicionIncreaseRate);
 }
