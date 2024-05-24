@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AgentVoice.h"
 #include "GameFramework/Character.h"
 #include "ProjectDishonored/AI/Navigation/PathPointInfo.h"
 #include "ProjectDishonored/Gameplay/Items/Weapon.h"
@@ -54,6 +55,9 @@ protected:
 	void StopShooting() const;
 	
 	//
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UAgentVoice* VoiceComponent;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool IsDead = false;

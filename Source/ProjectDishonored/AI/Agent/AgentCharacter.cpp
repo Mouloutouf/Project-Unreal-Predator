@@ -17,6 +17,8 @@
 AAgentCharacter::AAgentCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
+
+	VoiceComponent = CreateDefaultSubobject<UAgentVoice>(TEXT("Agent Voice"));
 }
 
 void AAgentCharacter::BeginPlay()
