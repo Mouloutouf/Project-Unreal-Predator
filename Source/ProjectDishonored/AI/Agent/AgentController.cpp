@@ -34,7 +34,7 @@ void AAgentController::Stop() const
 
 void AAgentController::SetDeathStatus() const
 {
-	Blackboard->SetValueAsBool("Dead State", true);
+	Blackboard->SetValueAsBool("DeadState", true);
 }
 
 void AAgentController::UpdateDetectionMeterAngle() const

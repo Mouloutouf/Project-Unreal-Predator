@@ -4,6 +4,7 @@
 
 #include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 
 UAgentVoice::UAgentVoice()
 {
@@ -17,7 +18,7 @@ void UAgentVoice::BeginPlay()
 
 USoundBase* UAgentVoice::GetRandomVoiceline(FSoundArray& _VoicelineArray)
 {
-	int r = rand() % _VoicelineArray.Sounds.Num();
+	int r = UKismetMathLibrary::RandomInteger(_VoicelineArray.Sounds.Num());
 	return _VoicelineArray.Sounds[r];
 }
 
@@ -59,7 +60,7 @@ void UAgentVoice::PlaySoundWithDelay(USoundBase* _Sound, float _Delay)
 
 void UAgentVoice::StopCurrentVoiceline() const
 {
-	if (CurrentPlayingAudio != nullptr)
+	if (UKismetSystemLibrary::IsValid(CurrentPlayingAudio) == true)
 	{
 		CurrentPlayingAudio->SetActive(false);
 	}

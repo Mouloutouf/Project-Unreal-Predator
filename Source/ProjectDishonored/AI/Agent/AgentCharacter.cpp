@@ -274,6 +274,8 @@ void AAgentCharacter::Death(FVector _HitDirection)
 	IsDead = true;
 
 	StopShooting();
+
+	VoiceComponent->StopCurrentVoiceline();
 	
 	CharacterMovement->DisableMovement();
 	CapsuleComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
