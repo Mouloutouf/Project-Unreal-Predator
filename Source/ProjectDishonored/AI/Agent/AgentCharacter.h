@@ -106,6 +106,11 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	AWeapon* Weapon = nullptr;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	int CustomDepthStencilAlive;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	int CustomDepthStencilDead;
 	
 public:
 	virtual void Tick(float _DeltaTime) override;

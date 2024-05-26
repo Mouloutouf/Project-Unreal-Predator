@@ -263,6 +263,12 @@ void APlayerCharacter::FinishConsumeBody()
 	SetConsumeWidgetVisible(DeadAgentsInRange.Num() > 0);
 }
 
+void APlayerCharacter::SwitchVision()
+{
+	VisionActive = !VisionActive;
+	SwitchVisionAnimation(VisionActive);
+}
+
 void APlayerCharacter::TryMakeNoise()
 {
 	if (IsSprinting == true)
@@ -303,9 +309,10 @@ void APlayerCharacter::UpdateRaycastAndReticle()
 
 void APlayerCharacter::UpdateEnergyAndHealth()
 {
-	float EnergyDecreaseSpeed = GetIsMoving() == true ? (IsSprinting == true ? EnergySprintDecreaseSpeed : EnergyMovementDecreaseSpeed) : EnergyImmobileDecreaseSpeed;
+	float BaseEnergyDecreaseRate = VisionActive == true ? VisionActiveEnergyDecreaseRate : DefaultEnergyDecreaseRate;
+	float EnergyDecreaseRate = BaseEnergyDecreaseRate + (GetIsMoving() == true ? (IsSprinting == true ? SprintEnergyDecreaseRate : MovementEnergyDecreaseRate) : 0);
 	
-	ChangeEnergy(-EnergyDecreaseSpeed * UGameplayStatics::GetWorldDeltaSeconds(this));
+	ChangeEnergy(-EnergyDecreaseRate * UGameplayStatics::GetWorldDeltaSeconds(this));
 
 	if (CurrentEnergy <= 0)
 	{
@@ -447,6 +454,14 @@ void APlayerCharacter::EatPressed()
 	TryConsumeBody();
 }
 
+void APlayerCharacter::VisionPressed()
+{
+	if (CanSwitchVision == false)
+		return;
+
+	SwitchVision();
+}
+
 // Called to bind functionality to input
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* _PlayerInputComponent)
 {
@@ -469,6 +484,8 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* _PlayerInputCo
 
 	_PlayerInputComponent->BindAction(TEXT("Kill"), IE_Pressed, this, &APlayerCharacter::TakedownPressed);
 	_PlayerInputComponent->BindAction(TEXT("Eat"), IE_Pressed, this, &APlayerCharacter::EatPressed);
+	
+	_PlayerInputComponent->BindAction(TEXT("Vision"), IE_Pressed, this, &APlayerCharacter::VisionPressed);
 }
 
 void APlayerCharacter::Tick(float _DeltaTime)

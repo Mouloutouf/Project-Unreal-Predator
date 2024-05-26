@@ -26,6 +26,8 @@ void AAgentCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	bUseControllerRotationYaw = false;
+
+	CustomDepthStencilAlive = Mesh->CustomDepthStencilValue;
 	
 	GatherDetectableCapsules();
 
@@ -285,6 +287,8 @@ void AAgentCharacter::Death(FVector _HitDirection)
 	{
 		Mesh->AddImpulse(_HitDirection, BoneToHit);
 	}
+
+	Mesh->SetCustomDepthStencilValue(CustomDepthStencilDead);
 
 	PlayerReference->RemoveAgentFromTakedown(this);
 

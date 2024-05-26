@@ -81,6 +81,11 @@ protected:
 	void ConsumeAnimation(float _Rate);
 	UFUNCTION(BlueprintCallable)
 	void FinishConsumeBody();
+
+	UFUNCTION()
+	void SwitchVision();
+	UFUNCTION(BlueprintImplementableEvent)
+	void SwitchVisionAnimation(bool _Activate);
 	
 	UFUNCTION()
 	void TryMakeNoise();
@@ -117,6 +122,8 @@ private:
 	void TakedownPressed();
 
 	void EatPressed();
+
+	void VisionPressed();
 	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
@@ -140,6 +147,8 @@ protected:
 	bool CanPerformSprint = true;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool CanPerformTakedown = true;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool CanSwitchVision = true;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool IsInProne;
@@ -153,6 +162,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool IsEating;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool VisionActive;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	float StandingHeight;
@@ -194,11 +206,13 @@ protected:
 	float CurrentEnergy;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float EnergyImmobileDecreaseSpeed = 0.25;
+	float DefaultEnergyDecreaseRate = 0;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float EnergyMovementDecreaseSpeed = 10;
+	float VisionActiveEnergyDecreaseRate = 1;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float EnergySprintDecreaseSpeed = 20;
+	float MovementEnergyDecreaseRate = 20;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float SprintEnergyDecreaseRate = 50;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float ConsumeEnergyIncrease;
