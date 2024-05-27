@@ -12,11 +12,12 @@ struct PROJECTDISHONORED_API FSoundArray
 	TArray<USoundBase*> Sounds;
 };
 
-USTRUCT(BlueprintType)
-struct PROJECTDISHONORED_API FAgentSoundData
+UCLASS()
+class PROJECTDISHONORED_API UAgentSoundData : public UDataAsset
 {
 	GENERATED_BODY()
 
+public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TMap<FString, FSoundArray> Voicelines;
 };

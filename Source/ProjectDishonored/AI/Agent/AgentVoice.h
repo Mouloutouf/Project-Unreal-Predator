@@ -35,7 +35,14 @@ public:
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FAgentSoundData AgentSoundData;
+	UAgentSoundData* AgentSoundData;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	UAudioComponent* CurrentPlayingAudio;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool SoundPlaying;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	float CurrentSoundTime;
 };

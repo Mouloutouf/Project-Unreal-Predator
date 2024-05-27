@@ -8,7 +8,7 @@
 
 UAgentVoice::UAgentVoice()
 {
-	PrimaryComponentTick.bCanEverTick = false;
+	PrimaryComponentTick.bCanEverTick = true;
 }
 
 void UAgentVoice::BeginPlay()
@@ -25,15 +25,25 @@ USoundBase* UAgentVoice::GetRandomVoiceline(FSoundArray& _VoicelineArray)
 void UAgentVoice::TickComponent(float _DeltaTime, ELevelTick _TickType, FActorComponentTickFunction* _ThisTickFunction)
 {
 	Super::TickComponent(_DeltaTime, _TickType, _ThisTickFunction);
+
+	if (SoundPlaying == true)
+	{
+		CurrentSoundTime -= _DeltaTime;
+		if (CurrentSoundTime <= 0)
+			SoundPlaying = false;
+	}
 }
 
 void UAgentVoice::PlayVoiceline(FString _VoicelineKey, float _Delay)
 {
-	if (AgentSoundData.Voicelines.Contains(_VoicelineKey) == true)
+	if (AgentSoundData == nullptr)
+		return;
+	
+	if (AgentSoundData->Voicelines.Contains(_VoicelineKey) == true)
 	{
 		StopCurrentVoiceline();
 		
-		USoundBase* RandomVoiceline = GetRandomVoiceline(AgentSoundData.Voicelines[_VoicelineKey]);
+		USoundBase* RandomVoiceline = GetRandomVoiceline(AgentSoundData->Voicelines[_VoicelineKey]);
 
 		if (_Delay > 0)
 		{
@@ -49,6 +59,9 @@ void UAgentVoice::PlayVoiceline(FString _VoicelineKey, float _Delay)
 void UAgentVoice::PlaySound(USoundBase* _Sound)
 {
 	CurrentPlayingAudio = UGameplayStatics::SpawnSoundAtLocation(this, _Sound, GetOwner()->GetActorLocation());
+	
+	SoundPlaying = true;
+	CurrentSoundTime = _Sound->Duration;
 }
 
 void UAgentVoice::PlaySoundWithDelay(USoundBase* _Sound, float _Delay)
@@ -60,7 +73,7 @@ void UAgentVoice::PlaySoundWithDelay(USoundBase* _Sound, float _Delay)
 
 void UAgentVoice::StopCurrentVoiceline() const
 {
-	if (UKismetSystemLibrary::IsValid(CurrentPlayingAudio) == true)
+	if (SoundPlaying == true)
 	{
 		CurrentPlayingAudio->SetActive(false);
 	}
