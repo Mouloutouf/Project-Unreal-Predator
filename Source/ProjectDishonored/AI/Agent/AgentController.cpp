@@ -23,7 +23,6 @@ void AAgentController::BeginPlay()
 
 	ChangeSuspicion(0);
 	
-	CurrentDetectionRate =  BaseDetectionRate;
 	SetTimelinePlayRate(1 / MinSuspicionIncreaseRate);
 }
 
@@ -49,17 +48,19 @@ void AAgentController::UpdateDetectionMeterAngle() const
 	DetectionMeterWidget->SetRenderTransformAngle(Angle);
 }
 
-// TODO Change this Method
 float AAgentController::GetDetectionIncreaseRate()
 {
 	float MaxIncreaseRate = SuspicionLevel == 0 ? MaxSuspicionIncreaseRate : MaxLureIncreaseRate;
 	float MinIncreaseRate = SuspicionLevel == 0 ? MinSuspicionIncreaseRate : MinLureIncreaseRate;
 	
-	float Distance = FVector::Distance(ControlledAgent->GetActorLocation(), PlayerReference->GetActorLocation());
-	float Alpha = Distance / IncreaseRateDistanceRatio;
+	float DistanceToPlayer = FVector::Distance(ControlledAgent->GetActorLocation(), PlayerReference->GetActorLocation());
+	float DistanceAlpha = DistanceToPlayer / IncreaseRateDistanceRatio;
 	
-	float RateByDistance = UKismetMathLibrary::Lerp(MaxIncreaseRate, MinIncreaseRate, Alpha);
-	return 1 / (RateByDistance * CurrentDetectionRate);
+	float DistanceToPlayerDetectionRate = UKismetMathLibrary::Lerp(MaxIncreaseRate, MinIncreaseRate, DistanceAlpha);
+	
+	float PlayerSpeedDetectionRate = PlayerReference->GetIsInProne() ? PlayerInProneDetectionRate : PlayerReference->GetIsSprinting() ? PlayerSprintingDetectionRate : PlayerNormalDetectionRate;
+	
+	return 1 / (DistanceToPlayerDetectionRate * PlayerSpeedDetectionRate);
 }
 
 float AAgentController::GetDetectionDecreaseRate()
@@ -195,27 +196,6 @@ void AAgentController::OnDetectionTimelineFinished()
 	}
 }
 
-bool AAgentController::TryUpdateDetectionRate()
-{
-	int PlayerSprintState = PlayerReference->GetIsSprinting() ? 1 : 0;
-	int PlayerCrouchState = PlayerReference->GetIsInProne() ? -1 : 0;
-
-	int NewPlayerState = PlayerSprintState + PlayerCrouchState;
-	
-	if (NewPlayerState == CurrentPlayerState)
-		return false;
-
-	CurrentPlayerState = NewPlayerState;
-	SetDetectionRate(CurrentPlayerState);
-
-	return true;
-}
-
-void AAgentController::SetDetectionRate(int _PlayerState)
-{
-	CurrentDetectionRate = _PlayerState == -1 ? CrouchDetectionRate : SuspicionLevel == 1 ? RunDetectionRate : BaseDetectionRate;
-}
-
 void AAgentController::UpdatePerception(AActor* _Actor, FAIStimulus _Stimulus)
 {
 	if (ControlledAgent->GetIsDead() == true)
@@ -281,7 +261,6 @@ void AAgentController::Tick(float _DeltaTime)
 	UpdatePlayerDetected();
 	
 	TrySetPlayerAsLurePosition();
-	TryUpdateDetectionRate();
 	
 	UpdateDetectionMeterAngle();
 	UpdateDetectionTimeline();

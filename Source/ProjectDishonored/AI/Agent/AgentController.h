@@ -72,11 +72,6 @@ protected:
 	
 	UFUNCTION(BlueprintCallable)
 	void OnDetectionTimelineFinished();
-	
-	UFUNCTION()
-	bool TryUpdateDetectionRate();
-	UFUNCTION()
-	void SetDetectionRate(int _PlayerState);
 
 	UFUNCTION(BlueprintCallable)
 	void UpdatePerception(AActor* _Actor, FAIStimulus _Stimulus);
@@ -136,14 +131,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float ChaseSpeed = 400;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	float CurrentDetectionRate;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float BaseDetectionRate = 1;
+	float PlayerNormalDetectionRate = 1;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float RunDetectionRate = 0.5;
+	float PlayerSprintingDetectionRate = 0.5;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float CrouchDetectionRate = 2;
+	float PlayerInProneDetectionRate = 2;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	int CurrentPlayerState;
