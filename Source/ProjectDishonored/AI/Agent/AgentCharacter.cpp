@@ -278,6 +278,7 @@ void AAgentCharacter::Death(FVector _HitDirection)
 	StopShooting();
 
 	VoiceComponent->StopCurrentVoiceline();
+	VoiceComponent->CanPlaySound = false;
 	
 	CharacterMovement->DisableMovement();
 	CapsuleComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);

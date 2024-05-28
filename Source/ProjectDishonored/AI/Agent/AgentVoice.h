@@ -33,6 +33,9 @@ public:
 	UFUNCTION()
 	void StopCurrentVoiceline() const;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool CanPlaySound = true;
+	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	UAgentSoundData* AgentSoundData;

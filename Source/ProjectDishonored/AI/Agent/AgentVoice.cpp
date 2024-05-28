@@ -43,8 +43,6 @@ void UAgentVoice::PlayVoiceline(FString _VoicelineKey, float _Delay)
 	
 	if (AgentSoundData->Voicelines.Contains(_VoicelineKey) == true)
 	{
-		StopCurrentVoiceline();
-		
 		USoundBase* RandomVoiceline = GetRandomVoiceline(AgentSoundData->Voicelines[_VoicelineKey]);
 
 		if (_Delay > 0)
@@ -60,6 +58,11 @@ void UAgentVoice::PlayVoiceline(FString _VoicelineKey, float _Delay)
 
 void UAgentVoice::PlaySound(USoundBase* _Sound)
 {
+	if (CanPlaySound == false)
+		return;
+
+	StopCurrentVoiceline();
+	
 	CurrentPlayingAudio = UGameplayStatics::SpawnSoundAtLocation(this, _Sound, GetOwner()->GetActorLocation());
 	
 	SoundPlaying = true;
