@@ -30,7 +30,9 @@ void UAgentVoice::TickComponent(float _DeltaTime, ELevelTick _TickType, FActorCo
 	{
 		CurrentSoundTime -= _DeltaTime;
 		if (CurrentSoundTime <= 0)
+		{
 			SoundPlaying = false;
+		}
 	}
 }
 

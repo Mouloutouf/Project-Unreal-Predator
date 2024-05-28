@@ -49,11 +49,15 @@ protected:
 	void ClearLurePosition();
 
 	UFUNCTION()
-	bool TrySetChasedPlayer() const;
+	bool TryLoseTrackOfChasedPlayer(float _DeltaTime);
 	UFUNCTION()
-	bool TryClearChasedPlayer() const;
+	bool TryUpdateChasedPlayerPosition();
 	UFUNCTION()
-	void ClearChasedPlayer() const;
+	bool TrySetChasedPlayer();
+	UFUNCTION()
+	bool TryClearChasedPlayer();
+	UFUNCTION()
+	void ClearChasedPlayer();
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void SetAimedStatus(bool _Status);
@@ -76,7 +80,7 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void UpdatePerception(AActor* _Actor, FAIStimulus _Stimulus);
 	UFUNCTION()
-	void UpdatePlayerDetected();
+	void UpdatePlayerVisible();
 	UFUNCTION()
 	bool TryDetectDeadBody(AAgentCharacter* _AgentCharacter);
 
@@ -97,7 +101,12 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool PlayerSensed = false;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	bool PlayerDetected = false;
+	bool PlayerVisible = false;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool PlayerTracked = false;
+	UPROPERTY()
+	bool WillLosePlayerTrack = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float MaxLureIncreaseRate = 0.0001;
@@ -119,6 +128,11 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float ChaseDecreaseRate = 5;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float TrackDecreaseRate = 2;
+	UPROPERTY()
+	float CurrentTrackDecreaseTime;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	UUserWidget* DetectionMeterWidget;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
@@ -137,9 +151,6 @@ protected:
 	float PlayerSprintingDetectionRate = 0.5;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float PlayerInProneDetectionRate = 2;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	int CurrentPlayerState;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool InLureState = false;
@@ -173,6 +184,8 @@ public:
 	UFUNCTION()
 	void SetDeathStatus() const;
 	
-	bool GetPlayerDetected() const { return PlayerDetected; }
+	bool GetPlayerVisible() const { return PlayerVisible; }
+	bool GetPlayerTracked() const { return PlayerTracked; }
+	
 	int GetSuspicionLevel() const { return SuspicionLevel; }
 };

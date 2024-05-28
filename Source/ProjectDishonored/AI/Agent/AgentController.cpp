@@ -106,7 +106,7 @@ bool AAgentController::TrySetPlayerAsLurePosition()
 	if (SuspicionLevel != 1)
 		return false;
 
-	if (PlayerDetected == false)
+	if (PlayerVisible == false)
 		return false;
 
 	SetLurePosition(PlayerReference->GetActorLocation());
@@ -136,29 +136,65 @@ void AAgentController::ClearLurePosition()
 	InLureState = false;
 }
 
-bool AAgentController::TrySetChasedPlayer() const
+bool AAgentController::TryLoseTrackOfChasedPlayer(float _DeltaTime)
 {
 	if (SuspicionLevel != 2)
 		return false;
 
-	Blackboard->SetValueAsObject("DetectedPlayer", PlayerReference);
+	if (WillLosePlayerTrack == false)
+		return false;
+
+	CurrentTrackDecreaseTime -= _DeltaTime;
+	if (CurrentTrackDecreaseTime <= 0)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::White, FString::Printf(TEXT("LOST TRACE OF PLAYER")));
+		PlayerTracked = false;
+		WillLosePlayerTrack = false;
+	}
 
 	return true;
 }
 
-bool AAgentController::TryClearChasedPlayer() const
+bool AAgentController::TryUpdateChasedPlayerPosition()
+{
+	if (SuspicionLevel != 2)
+		return false;
+
+	if (PlayerTracked == false)
+		return false;
+
+	Blackboard->SetValueAsVector("PlayerKnownPosition", PlayerReference->GetActorLocation());
+
+	return true;
+}
+
+bool AAgentController::TrySetChasedPlayer()
+{
+	if (SuspicionLevel != 2)
+		return false;
+
+	Blackboard->SetValueAsBool("PlayerDetected", true);
+
+	PlayerTracked = true;
+
+	return true;
+}
+
+bool AAgentController::TryClearChasedPlayer()
 {
 	if (SuspicionLevel == 2)
 		return false;
 
 	ClearChasedPlayer();
 
+	PlayerTracked = false;
+	
 	return true;
 }
 
-void AAgentController::ClearChasedPlayer() const
+void AAgentController::ClearChasedPlayer()
 {
-	Blackboard->ClearValue("DetectedPlayer");
+	Blackboard->ClearValue("PlayerDetected");
 }
 
 void AAgentController::IncreaseTimeline()
@@ -179,7 +215,7 @@ void AAgentController::DecreaseTimeline()
 
 void AAgentController::OnDetectionTimelineFinished()
 {
-	if (PlayerDetected == true)
+	if (PlayerVisible == true)
 	{
 		IncreaseSuspicion();
 		TrySetChasedPlayer();
@@ -201,7 +237,7 @@ void AAgentController::UpdatePerception(AActor* _Actor, FAIStimulus _Stimulus)
 	if (ControlledAgent->GetIsDead() == true)
 		return;
 
-	if ((AActor*)PlayerReference == _Actor)
+	if (PlayerReference == _Actor)
 	{
 		PlayerSensed = _Stimulus.WasSuccessfullySensed();
 	}
@@ -213,18 +249,27 @@ void AAgentController::UpdatePerception(AActor* _Actor, FAIStimulus _Stimulus)
 	}
 }
 
-void AAgentController::UpdatePlayerDetected()
+void AAgentController::UpdatePlayerVisible()
 {
-	bool PlayerDetectedStatus = PlayerSensed == true && PlayerReference->GetIsDead() == false && PlayerReference->IsHidden() == false;
-	if (PlayerDetected != PlayerDetectedStatus)
+	bool PlayerVisibilityStatus = PlayerSensed == true && PlayerReference->GetIsDead() == false && PlayerReference->IsHidden() == false;
+	if (PlayerVisible != PlayerVisibilityStatus)
 	{
-		PlayerDetected = PlayerDetectedStatus;
-		if (PlayerDetected == true)
+		PlayerVisible = PlayerVisibilityStatus;
+		
+		if (PlayerVisible == true)
 		{
+			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::White, FString::Printf(TEXT("PLAYER VISIBLE")));
 			SetDetectionVisibility(true);
+			WillLosePlayerTrack = false;
+		}
+		else if (SuspicionLevel == 2 && WillLosePlayerTrack == false)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::White, FString::Printf(TEXT("PLAYER NOT VISIBLE ANYMORE")));
+			WillLosePlayerTrack = true;
+			CurrentTrackDecreaseTime = TrackDecreaseRate;
 		}
 
-		ControlledAgent->CanSeePlayer = PlayerDetected;
+		ControlledAgent->CanSeePlayer = PlayerVisible;
 	}
 }
 
@@ -258,7 +303,10 @@ void AAgentController::Tick(float _DeltaTime)
 	if (ControlledAgent->GetIsDead() == true)
 		return;
 
-	UpdatePlayerDetected();
+	UpdatePlayerVisible();
+
+	TryUpdateChasedPlayerPosition();
+	TryLoseTrackOfChasedPlayer(_DeltaTime);
 	
 	TrySetPlayerAsLurePosition();
 	
@@ -272,4 +320,6 @@ void AAgentController::InitBehavior()
 	
 	Blackboard->SetValueAsFloat("WaitTimeBeforeShoot", WaitBeforeShoot);
 	Blackboard->SetValueAsFloat("WaitTimeAfterShoot", WaitAfterShoot);
+
+	Blackboard->SetValueAsObject("PlayerReference", PlayerReference);
 }

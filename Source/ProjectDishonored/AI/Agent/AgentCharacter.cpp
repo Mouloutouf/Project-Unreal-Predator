@@ -137,7 +137,7 @@ void AAgentCharacter::CheckPlayerCanTakedown()
 	if (PlayerReference == nullptr || PlayerReference->GetIsInTakedown() == true)
 		return;
 
-	float KillRadius = ControllerReference->GetPlayerDetected() == true ? PlayerReference->DetectedKillRadius : PlayerReference->UndetectedKillRadius;
+	float KillRadius = ControllerReference->GetPlayerVisible() == true ? PlayerReference->DetectedKillRadius : PlayerReference->UndetectedKillRadius;
 	bool InsideRange = FVector::Distance(GetBodyCenterLocation(), PlayerReference->GetActorLocation()) <= KillRadius;
 
 	bool InsideHeight = UKismetMathLibrary::Abs(PlayerReference->GetActorLocation().Z - GetBodyCenterLocation().Z) <= PlayerReference->KillHeightRange;
