@@ -8,6 +8,15 @@
 #include "Perception/AIPerceptionTypes.h"
 #include "AgentController.generated.h"
 
+UENUM(BlueprintType)
+enum EBehaviourStatus { Patrol, Lure, Investigation, Attack };
+
+UENUM(BlueprintType)
+enum EDistractionType { None, SeeingPlayer, SeeingDeadBody, HearingGunshot, LosingSightPlayer };
+
+UENUM(BlueprintType)
+enum EInterruptionType { Blank, Light, Strong, NothingFound, BodyFound, PlayerLost };
+
 UCLASS()
 class PROJECTDISHONORED_API AAgentController : public AAIController
 {
@@ -33,31 +42,23 @@ protected:
 	void DecreaseSuspicion();
 	UFUNCTION()
 	void ChangeSuspicion(int _Value);
-	UFUNCTION()
-	void OnSuspicionChanged();
 	
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void UpdateDisplayedSuspicionUI();
 
-	UFUNCTION()
-	bool TrySetPlayerAsLurePosition();
-	UFUNCTION()
-	bool TrySetLurePosition(FVector _Position);
-	UFUNCTION()
-	void SetLurePosition(FVector _Position);
 	UFUNCTION(BlueprintCallable)
-	void ClearLurePosition();
+	void SetDistractionLure(EDistractionType _DistractionType, FVector _Position = FVector::ZeroVector);
+	UFUNCTION(BlueprintCallable)
+	void SetFirstLureInterruption(EDistractionType _DistractionType);
+	UFUNCTION(BlueprintCallable)
+	void SetFinalLureInterruption(EDistractionType _DistractionType);
+	UFUNCTION(BlueprintCallable)
+	void SetInterruption(EInterruptionType _InterruptionType, float _WaitTime = 0);
+	UFUNCTION()
+	void SetInvestigation();
 
 	UFUNCTION()
 	bool TryLoseTrackOfChasedPlayer(float _DeltaTime);
-	UFUNCTION()
-	bool TryUpdateChasedPlayerPosition();
-	UFUNCTION()
-	bool TrySetChasedPlayer();
-	UFUNCTION()
-	bool TryClearChasedPlayer();
-	UFUNCTION()
-	void ClearChasedPlayer();
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void SetAimedStatus(bool _Status);
@@ -73,7 +74,6 @@ protected:
 	void OnTimelineRestart(float _NewTime);
 	UFUNCTION(BlueprintImplementableEvent)
 	void UpdateDetectionTimeline();
-	
 	UFUNCTION(BlueprintCallable)
 	void OnDetectionTimelineFinished();
 
@@ -81,8 +81,6 @@ protected:
 	void UpdatePerception(AActor* _Actor, FAIStimulus _Stimulus);
 	UFUNCTION()
 	void UpdatePlayerVisible();
-	UFUNCTION()
-	bool TryDetectDeadBody(AAgentCharacter* _AgentCharacter);
 
 	UFUNCTION()
 	void OnPlayerDeath();
@@ -94,19 +92,18 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	APlayerCharacter* PlayerReference;
 
-	// TODO Make the Suspicion Level an Enum
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	int SuspicionLevel = 0;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TEnumAsByte<EBehaviourStatus> BehaviourStatus;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool PlayerSensed = false;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool PlayerVisible = false;
-	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool PlayerTracked = false;
-	UPROPERTY()
-	bool WillLosePlayerTrack = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float MaxLureIncreaseRate = 0.0001;
@@ -127,11 +124,20 @@ protected:
 	float SuspicionDecreaseRate = 1;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float ChaseDecreaseRate = 5;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float TrackDecreaseRate = 2;
-	UPROPERTY()
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	bool WillLosePlayerTrack = false;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	float CurrentTrackDecreaseTime;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float PlayerNormalDetectionRate = 1;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float PlayerSprintingDetectionRate = 0.5;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float PlayerInProneDetectionRate = 2;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	UUserWidget* DetectionMeterWidget;
@@ -145,26 +151,49 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float ChaseSpeed = 400;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	TEnumAsByte<EDistractionType> CurrentDistraction;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	bool IsInterrupted = false;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float PlayerNormalDetectionRate = 1;
+	TMap<TEnumAsByte<EDistractionType>, float> DistractionLureSpeeds;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float PlayerSprintingDetectionRate = 0.5;
+	TMap<TEnumAsByte<EDistractionType>, float> DistractionLureWaitTimes;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float PlayerInProneDetectionRate = 2;
+	TMap<TEnumAsByte<EInterruptionType>, FString> InterruptionVoicelineTypes;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float DefaultInterruptionWaitTime = 1;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	bool InLureState = false;
+	FString CurrentDistractionVoicelineType;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	FVector CurrentLureDestination;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	float CurrentLureWaitTime;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	float CurrentLureSpeed;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	float CurrentInterruptionWaitTime;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float StopOffsetFromLurePosition = 100;
+	float DistractionLureOffsetFromPosition = 100;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TSet<FString> DeadAgentsCache;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float WaitBeforeShoot = 0.5;
+	float AttackWaitBeforeShoot = 0.5;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float WaitAfterShoot = 2;
+	float AttackWaitAfterShoot = 2;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FString AttackPlayerVisibleVoicelineType;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FString AttackPlayerNotVisibleVoicelineType;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FString AttackPlayerNotTrackedVoicelineType;
 	
 public:
 	virtual void Tick(float _DeltaTime) override;
@@ -180,9 +209,6 @@ public:
 	void SetDetectionVisibility(bool _Visibility);
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void SetDetectionProgress(float _Progress);
-
-	UFUNCTION()
-	void SetDeathStatus() const;
 	
 	bool GetPlayerVisible() const { return PlayerVisible; }
 	bool GetPlayerTracked() const { return PlayerTracked; }

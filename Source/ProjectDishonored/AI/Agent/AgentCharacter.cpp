@@ -233,7 +233,7 @@ void AAgentCharacter::Tick(float _DeltaTime)
 	}
 }
 
-void AAgentCharacter::ChangeCharacterSpeed(float _NewSpeed) const
+void AAgentCharacter::SetCharacterSpeed(float _NewSpeed) const
 {
 	CharacterMovement->MaxWalkSpeed = _NewSpeed;
 }
@@ -294,5 +294,4 @@ void AAgentCharacter::Death(FVector _HitDirection)
 	PlayerReference->RemoveAgentFromTakedown(this);
 
 	ControllerReference->SetDetectionVisibility(false);
-	ControllerReference->SetDeathStatus();
 }

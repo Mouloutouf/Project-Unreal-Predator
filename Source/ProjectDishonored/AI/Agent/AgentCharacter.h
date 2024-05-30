@@ -115,8 +115,8 @@ protected:
 public:
 	virtual void Tick(float _DeltaTime) override;
 
-	UFUNCTION()
-	void ChangeCharacterSpeed(float _NewSpeed) const;
+	UFUNCTION(BlueprintCallable)
+	void SetCharacterSpeed(float _NewSpeed) const;
 
 	UFUNCTION()
 	void EnableCharacter(bool _Enable);
@@ -153,9 +153,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	APath* Path;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	bool CanSeePlayer = false;
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	bool IsAttackingPlayer = false;
 };

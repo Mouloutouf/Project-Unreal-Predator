@@ -36,6 +36,7 @@ void UAgentVoice::TickComponent(float _DeltaTime, ELevelTick _TickType, FActorCo
 	}
 }
 
+// TODO Return a Boolean to Know if the Voiceline was indeed Played
 void UAgentVoice::PlayVoiceline(FString _VoicelineKey, float _Delay)
 {
 	if (AgentSoundData == nullptr)

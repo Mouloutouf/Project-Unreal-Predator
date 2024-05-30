@@ -31,11 +31,6 @@ void AAgentController::Stop() const
 	BrainComponent->StopLogic("");
 }
 
-void AAgentController::SetDeathStatus() const
-{
-	Blackboard->SetValueAsBool("DeadState", true);
-}
-
 void AAgentController::UpdateDetectionMeterAngle() const
 {
 	if (UKismetSystemLibrary::IsValid(DetectionMeterWidget) == false)
@@ -86,54 +81,87 @@ void AAgentController::ChangeSuspicion(int _Value)
 
 	SuspicionLevel = _Value;
 	
-	ControlledAgent->IsAttackingPlayer = SuspicionLevel == 2;
-
-	OnSuspicionChanged();
-}
-
-void AAgentController::OnSuspicionChanged()
-{
-	SetAimedStatus(SuspicionLevel > 0);
-	
 	UpdateDisplayedSuspicionUI();
 
-	float Speed = SuspicionLevel == 0 ? PatrolSpeed : SuspicionLevel == 1 ? LureSpeed : ChaseSpeed;
-	ControlledAgent->ChangeCharacterSpeed(Speed);
+	// TODO Set a Distraction After the Attack when Player is Lost and Suspicion Decreases
 }
 
-bool AAgentController::TrySetPlayerAsLurePosition()
+void AAgentController::SetDistractionLure(EDistractionType _DistractionType, FVector _Position)
 {
-	if (SuspicionLevel != 1)
-		return false;
-
-	if (PlayerVisible == false)
-		return false;
-
-	SetLurePosition(PlayerReference->GetActorLocation());
+	// TODO Create a Service to Update this Position during Lure
+	CurrentLureDestination = _Position;
 	
-	return true;
-}
-
-bool AAgentController::TrySetLurePosition(FVector _Position)
-{
-	if (Blackboard->IsVectorValueSet("CurrentLurePosition") == true)
-		return false;
-
-	SetLurePosition(_Position);
+	if (CurrentDistraction == _DistractionType)
+		return;
 	
-	return true;
+	if (_DistractionType != EDistractionType::None)
+	{
+		SetFirstLureInterruption(_DistractionType);
+		
+		CurrentLureSpeed = DistractionLureSpeeds[_DistractionType];
+		CurrentLureWaitTime = DistractionLureWaitTimes[_DistractionType];
+	}
+	
+	CurrentDistraction = _DistractionType;
 }
 
-void AAgentController::SetLurePosition(FVector _Position)
+void AAgentController::SetFirstLureInterruption(EDistractionType _DistractionType)
 {
-	Blackboard->SetValueAsVector("CurrentLurePosition", _Position);
-	InLureState = true;
+	EInterruptionType InterruptionType = EInterruptionType::Blank;
+		
+	switch (_DistractionType)
+	{
+	case SeeingPlayer:
+	case SeeingDeadBody:
+		InterruptionType = EInterruptionType::Light;
+		break;
+	case HearingGunshot:
+		InterruptionType = EInterruptionType::Strong;
+		break;
+	case LosingSightPlayer:
+		InterruptionType = EInterruptionType::PlayerLost;
+		break;
+	case None:
+		break;
+	}
+		
+	SetInterruption(InterruptionType);
 }
 
-void AAgentController::ClearLurePosition()
+void AAgentController::SetFinalLureInterruption(EDistractionType _DistractionType)
 {
-	Blackboard->ClearValue("CurrentLurePosition");
-	InLureState = false;
+	EInterruptionType InterruptionType = EInterruptionType::Blank;
+		
+	switch (_DistractionType)
+	{
+	case SeeingPlayer:
+	case HearingGunshot:
+	InterruptionType = EInterruptionType::NothingFound;
+		break;
+	case SeeingDeadBody:
+		InterruptionType = EInterruptionType::BodyFound;
+		break;
+	case LosingSightPlayer:
+		InterruptionType = EInterruptionType::Blank;
+		break;
+	case None:
+		break;
+	}
+		
+	SetInterruption(InterruptionType);
+}
+
+void AAgentController::SetInterruption(EInterruptionType _InterruptionType, float _WaitTime)
+{
+	IsInterrupted = true;
+	
+	CurrentDistractionVoicelineType = _InterruptionType == EInterruptionType::Blank ? FString() : InterruptionVoicelineTypes[_InterruptionType];
+	CurrentInterruptionWaitTime = _WaitTime > 0 ? _WaitTime : DefaultInterruptionWaitTime;
+}
+
+void AAgentController::SetInvestigation()
+{
+	// TODO Investigation Behaviour
 }
 
 bool AAgentController::TryLoseTrackOfChasedPlayer(float _DeltaTime)
@@ -147,54 +175,11 @@ bool AAgentController::TryLoseTrackOfChasedPlayer(float _DeltaTime)
 	CurrentTrackDecreaseTime -= _DeltaTime;
 	if (CurrentTrackDecreaseTime <= 0)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::White, FString::Printf(TEXT("LOST TRACE OF PLAYER")));
 		PlayerTracked = false;
 		WillLosePlayerTrack = false;
 	}
 
 	return true;
-}
-
-bool AAgentController::TryUpdateChasedPlayerPosition()
-{
-	if (SuspicionLevel != 2)
-		return false;
-
-	if (PlayerTracked == false)
-		return false;
-
-	Blackboard->SetValueAsVector("PlayerKnownPosition", PlayerReference->GetActorLocation());
-
-	return true;
-}
-
-bool AAgentController::TrySetChasedPlayer()
-{
-	if (SuspicionLevel != 2)
-		return false;
-
-	Blackboard->SetValueAsBool("PlayerDetected", true);
-
-	PlayerTracked = true;
-
-	return true;
-}
-
-bool AAgentController::TryClearChasedPlayer()
-{
-	if (SuspicionLevel == 2)
-		return false;
-
-	ClearChasedPlayer();
-
-	PlayerTracked = false;
-	
-	return true;
-}
-
-void AAgentController::ClearChasedPlayer()
-{
-	Blackboard->ClearValue("PlayerDetected");
 }
 
 void AAgentController::IncreaseTimeline()
@@ -218,16 +203,12 @@ void AAgentController::OnDetectionTimelineFinished()
 	if (PlayerVisible == true)
 	{
 		IncreaseSuspicion();
-		TrySetChasedPlayer();
-		
 		IncreaseTimeline();
 	}
 	else
 	{
 		DecreaseSuspicion();
 		SetDetectionVisibility(false);
-		TryClearChasedPlayer();
-		
 		DecreaseTimeline();
 	}
 }
@@ -237,15 +218,24 @@ void AAgentController::UpdatePerception(AActor* _Actor, FAIStimulus _Stimulus)
 	if (ControlledAgent->GetIsDead() == true)
 		return;
 
+	// Try Sense Player
 	if (PlayerReference == _Actor)
 	{
 		PlayerSensed = _Stimulus.WasSuccessfullySensed();
 	}
 	
+	// Try Sense Agent
 	AAgentCharacter* OtherAgent = dynamic_cast<AAgentCharacter*>(_Actor);
 	if (OtherAgent != nullptr)
 	{
-		TryDetectDeadBody(OtherAgent);
+		// Check if Dead
+		if (OtherAgent->GetIsDead() == false || OtherAgent->IsHidden() == true || DeadAgentsCache.Contains(OtherAgent->GetName()) == true)
+			return;
+
+		FVector LurePosition = MathUtility::GetPositionAtDistance(OtherAgent->GetActorLocation(), ControlledAgent->GetActorLocation(), DistractionLureOffsetFromPosition);
+		SetDistractionLure(EDistractionType::SeeingDeadBody, LurePosition);
+
+		DeadAgentsCache.Emplace(OtherAgent->GetName());
 	}
 }
 
@@ -254,46 +244,40 @@ void AAgentController::UpdatePlayerVisible()
 	bool PlayerVisibilityStatus = PlayerSensed == true && PlayerReference->GetIsDead() == false && PlayerReference->IsHidden() == false;
 	if (PlayerVisible != PlayerVisibilityStatus)
 	{
-		PlayerVisible = PlayerVisibilityStatus;
-		
+		PlayerVisible = ControlledAgent->CanSeePlayer = PlayerVisibilityStatus;
+
 		if (PlayerVisible == true)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::White, FString::Printf(TEXT("PLAYER VISIBLE")));
 			SetDetectionVisibility(true);
-			WillLosePlayerTrack = false;
 		}
-		else if (SuspicionLevel == 2 && WillLosePlayerTrack == false)
+
+		if (SuspicionLevel == 2)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::White, FString::Printf(TEXT("PLAYER NOT VISIBLE ANYMORE")));
-			WillLosePlayerTrack = true;
-			CurrentTrackDecreaseTime = TrackDecreaseRate;
+			if (PlayerVisible == true)
+			{
+				WillLosePlayerTrack = false;
+				PlayerTracked = true;
+			}
+			else if (WillLosePlayerTrack == false)
+			{
+				WillLosePlayerTrack = true;
+				CurrentTrackDecreaseTime = TrackDecreaseRate;
+			}
 		}
-
-		ControlledAgent->CanSeePlayer = PlayerVisible;
 	}
-}
 
-bool AAgentController::TryDetectDeadBody(AAgentCharacter* _AgentCharacter)
-{
-	if (_AgentCharacter->GetIsDead() == false || _AgentCharacter->IsHidden() == true || DeadAgentsCache.Contains(_AgentCharacter->GetName()) == true)
-		return false;
-
-	FVector LurePosition = MathUtility::GetPositionAtDistance(_AgentCharacter->GetActorLocation(), ControlledAgent->GetActorLocation(), StopOffsetFromLurePosition);
-	TrySetLurePosition(LurePosition);
-
-	DeadAgentsCache.Emplace(_AgentCharacter->GetName());
-
-	GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::White, FString::Printf(TEXT("A DEAD BODY !")));
-
-	return true;
+	if (PlayerVisible == true)
+	{
+		if (SuspicionLevel == 1)
+		{
+			SetDistractionLure(EDistractionType::SeeingPlayer, PlayerReference->GetActorLocation());
+		}
+	}
 }
 
 void AAgentController::OnPlayerDeath()
 {
 	ChangeSuspicion(0);
-
-	ClearChasedPlayer();
-	ClearLurePosition();
 }
 
 void AAgentController::Tick(float _DeltaTime)
@@ -303,23 +287,24 @@ void AAgentController::Tick(float _DeltaTime)
 	if (ControlledAgent->GetIsDead() == true)
 		return;
 
-	UpdatePlayerVisible();
-
-	TryUpdateChasedPlayerPosition();
-	TryLoseTrackOfChasedPlayer(_DeltaTime);
-	
-	TrySetPlayerAsLurePosition();
-	
 	UpdateDetectionMeterAngle();
 	UpdateDetectionTimeline();
+	
+	UpdatePlayerVisible();
+
+	// TODO Refac Behaviour Tree to Include this Method in a Service
+	TryLoseTrackOfChasedPlayer(_DeltaTime);
 }
 
 void AAgentController::InitBehavior()
 {
 	Run();
-	
-	Blackboard->SetValueAsFloat("WaitTimeBeforeShoot", WaitBeforeShoot);
-	Blackboard->SetValueAsFloat("WaitTimeAfterShoot", WaitAfterShoot);
 
+	// TODO Put these in a Begin Sequence Task with a Decorator to Check if Behaviour Tree is Initialized
 	Blackboard->SetValueAsObject("PlayerReference", PlayerReference);
+
+	Blackboard->SetValueAsEnum("CurrentBehaviourStatus", EBehaviourStatus::Patrol);
+	
+	Blackboard->SetValueAsFloat("WaitTimeBeforeShoot", AttackWaitBeforeShoot);
+	Blackboard->SetValueAsFloat("WaitTimeAfterShoot", AttackWaitAfterShoot);
 }
