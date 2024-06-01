@@ -202,12 +202,12 @@ void APlayerCharacter::InitiateKill()
 
 void APlayerCharacter::FinishTakedown()
 {
-	CurrentAgentInTakedownRange->Death(CurrentTakedownDirection * TakedownRagdollForce);
-	
-	if (CurrentAgentInTakedownRange->IsAttackingPlayer == true)
+	if (CurrentAgentInTakedownRange->CanSeePlayer == true && CurrentAgentInTakedownRange->IsAttackingPlayer == true)
 	{
 		ChangeHealth(-TakedownDetectedHealthDecrease);
 	}
+
+	CurrentAgentInTakedownRange->Death(CurrentTakedownDirection * TakedownRagdollForce);
 
 	IsInTakedown = false;
 	EnableAbilities(true);
