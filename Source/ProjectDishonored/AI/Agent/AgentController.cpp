@@ -204,6 +204,9 @@ void AAgentController::TimerBeforeJoiningChaseOfPlayer(float _DeltaTime)
 	if (CurrentJoinChaseIncreaseTime >= JoinChaseIncreaseRate)
 	{
 		ChangeSuspicion(2);
+		PlayerTracked = true;
+		OnTimelineRestart(0.5);
+		
 		WillJoinPlayerChase = false;
 	}
 }
@@ -255,12 +258,21 @@ void AAgentController::UpdatePerception(AActor* _Actor, FAIStimulus _Stimulus)
 	if (OtherAgent != nullptr)
 	{
 		// Check if In Chase
-		if (OtherAgent->IsAttackingPlayer == true && SuspicionLevel != 2 && WillJoinPlayerChase == false)
+		if (OtherAgent->IsAttackingPlayer == true)
 		{
-			WillJoinPlayerChase = true;
-			CurrentJoinChaseIncreaseTime = 0;
+			if (SuspicionLevel != 2 && WillJoinPlayerChase == false && _Stimulus.WasSuccessfullySensed() == true)
+			{
+				WillJoinPlayerChase = true;
+				CurrentJoinChaseIncreaseTime = 0;
 
-			ChangeSuspicion(1);
+				ChangeSuspicion(1);
+			}
+			else if (_Stimulus.WasSuccessfullySensed() == false)
+			{
+				WillJoinPlayerChase = false;
+				
+				ChangeSuspicion(0);
+			}
 		}
 		
 		// Check if Dead
