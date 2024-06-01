@@ -18,8 +18,10 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	UFUNCTION()
-	static USoundBase* GetRandomVoiceline(FSoundArray& _VoicelineArray);
+	TKeyValuePair<int, USoundBase*> GetRandomVoiceline(const TArray<TKeyValuePair<int, USoundBase*>>& _Voicelines);
+
+	TArray<TKeyValuePair<int, USoundBase*>> GetAvailableVoicelines(FString _VoicelineKey);
+	
 	UFUNCTION()
 	void PlaySound(USoundBase* _Sound);
 	UFUNCTION()
@@ -40,12 +42,15 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	UAgentSoundData* AgentSoundData;
 
+	TKeyValuePair<FString, int> UnavailableVoicelineAtIndex;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	UAudioComponent* CurrentPlayingAudio;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool SoundPlaying;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	float CurrentSoundTime;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	USoundAttenuation* SoundAttenuation;
 };

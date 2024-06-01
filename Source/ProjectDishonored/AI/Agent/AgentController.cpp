@@ -99,7 +99,6 @@ void AAgentController::SetDistractionLure(EDistractionType _DistractionType, FVe
 		SetFirstLureInterruption(_DistractionType);
 		
 		CurrentLureSpeed = DistractionLureSpeeds[_DistractionType];
-		CurrentLureWaitTime = DistractionLureWaitTimes[_DistractionType];
 	}
 	
 	CurrentDistraction = _DistractionType;
@@ -125,7 +124,7 @@ void AAgentController::SetFirstLureInterruption(EDistractionType _DistractionTyp
 		break;
 	}
 		
-	SetInterruption(InterruptionType);
+	SetInterruption(InterruptionType, DistractionLureWaitTimes[_DistractionType]);
 }
 
 void AAgentController::SetFinalLureInterruption(EDistractionType _DistractionType)
@@ -148,7 +147,7 @@ void AAgentController::SetFinalLureInterruption(EDistractionType _DistractionTyp
 		break;
 	}
 		
-	SetInterruption(InterruptionType);
+	SetInterruption(InterruptionType, DistractionLureWaitTimes[_DistractionType]);
 }
 
 void AAgentController::SetInterruption(EInterruptionType _InterruptionType, float _WaitTime)
@@ -250,28 +249,27 @@ void AAgentController::UpdatePlayerVisible()
 		{
 			SetDetectionVisibility(true);
 		}
+	}
 
-		if (SuspicionLevel == 2)
+	bool ShouldTrackPlayer = SuspicionLevel == 2 && PlayerVisible == true;
+	if (PlayerTracked != ShouldTrackPlayer)
+	{
+		if (ShouldTrackPlayer == true)
 		{
-			if (PlayerVisible == true)
-			{
-				WillLosePlayerTrack = false;
-				PlayerTracked = true;
-			}
-			else if (WillLosePlayerTrack == false)
-			{
-				WillLosePlayerTrack = true;
-				CurrentTrackDecreaseTime = TrackDecreaseRate;
-			}
+			WillLosePlayerTrack = false;
+			PlayerTracked = true;
+		}
+		else if (WillLosePlayerTrack == false)
+		{
+			WillLosePlayerTrack = true;
+			CurrentTrackDecreaseTime = TrackDecreaseRate;
 		}
 	}
 
-	if (PlayerVisible == true)
+	bool ShouldBeDistracted = SuspicionLevel == 1 && PlayerVisible == true;
+	if (ShouldBeDistracted == true)
 	{
-		if (SuspicionLevel == 1)
-		{
-			SetDistractionLure(EDistractionType::SeeingPlayer, PlayerReference->GetActorLocation());
-		}
+		SetDistractionLure(EDistractionType::SeeingPlayer, PlayerReference->GetActorLocation());
 	}
 }
 
@@ -287,10 +285,10 @@ void AAgentController::Tick(float _DeltaTime)
 	if (ControlledAgent->GetIsDead() == true)
 		return;
 
+	UpdatePlayerVisible();
+	
 	UpdateDetectionMeterAngle();
 	UpdateDetectionTimeline();
-	
-	UpdatePlayerVisible();
 
 	// TODO Refac Behaviour Tree to Include this Method in a Service
 	TryLoseTrackOfChasedPlayer(_DeltaTime);

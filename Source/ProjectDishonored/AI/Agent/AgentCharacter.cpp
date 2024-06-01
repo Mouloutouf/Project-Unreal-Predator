@@ -59,6 +59,9 @@ void AAgentCharacter::Stop()
 
 void AAgentCharacter::SetNextDestination()
 {
+	// if (GetName() == "AgentAlfred")
+	// 	GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::White, FString::Printf(TEXT("SET NEXT DESTINATION %s"), *GetName()));
+	
 	if (UKismetSystemLibrary::IsValid(Path) == false)
 		return;
 
@@ -89,12 +92,14 @@ void AAgentCharacter::SetNextDestination()
 		}
 	}
 
-	SetDestinationInfo(Path->PathPoints[CurrentPathIndex]);
+	SetDestination(Path->PathPoints[CurrentPathIndex]);
+	
 	AtDestination = false;
+	
 	NextInPath();
 }
 
-void AAgentCharacter::SetDestinationInfo(FPathPointInfo _PathPointInfo)
+void AAgentCharacter::SetDestination(FPathPointInfo _PathPointInfo)
 {
 	CurrentPoint = _PathPointInfo.PathPoint;
 	CurrentPoint->WaitTime = _PathPointInfo.WaitTime;

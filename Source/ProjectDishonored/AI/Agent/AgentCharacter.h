@@ -30,7 +30,7 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void SetNextDestination();
 	UFUNCTION()
-	void SetDestinationInfo(FPathPointInfo _PathPointInfo);
+	void SetDestination(FPathPointInfo _PathPointInfo);
 	
 	UFUNCTION()
 	void NextInPath();

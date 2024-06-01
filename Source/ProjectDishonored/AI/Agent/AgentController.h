@@ -170,8 +170,6 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	FVector CurrentLureDestination;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	float CurrentLureWaitTime;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	float CurrentLureSpeed;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
