@@ -38,6 +38,8 @@ protected:
 	USceneComponent* FireRoot;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	bool InfiniteAmmo = false;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	int MaxAmmo;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	int CurrentAmmo;

@@ -323,7 +323,9 @@ void AAgentController::OnPlayerDeath()
 {
 	IsInterrupted = false;
 	CurrentDistraction = EDistractionType::None;
+	
 	ChangeSuspicion(0);
+	ControlledAgent->IsAttackingPlayer = false;
 }
 
 void AAgentController::Tick(float _DeltaTime)

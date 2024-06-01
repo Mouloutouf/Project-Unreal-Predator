@@ -34,7 +34,10 @@ void AGun::BeginPlay()
 
 void AGun::TryFire()
 {
-	if (CurrentAmmo <= 0 || (CurrentFiringMode == FiringMode::Burst && CurrentFireCount >= BurstFireAmount))
+	bool HasAmmo = InfiniteAmmo == true || CurrentAmmo > 0;
+	bool StopBurst = CurrentFiringMode == FiringMode::Burst && CurrentFireCount >= BurstFireAmount;
+	
+	if (HasAmmo == false || StopBurst == true)
 	{
 		StopShoot();
 		return;

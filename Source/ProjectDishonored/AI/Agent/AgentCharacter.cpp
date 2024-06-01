@@ -59,9 +59,6 @@ void AAgentCharacter::Stop()
 
 void AAgentCharacter::SetNextDestination()
 {
-	// if (GetName() == "AgentAlfred")
-	// 	GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::White, FString::Printf(TEXT("SET NEXT DESTINATION %s"), *GetName()));
-	
 	if (UKismetSystemLibrary::IsValid(Path) == false)
 		return;
 
