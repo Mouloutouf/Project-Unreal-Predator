@@ -273,7 +273,6 @@ void APlayerCharacter::TryMakeNoise()
 {
 	if (IsSprinting == true)
 	{
-		// TODO Debug This
 		UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 0.5f, this);
 	}
 }

@@ -6,6 +6,7 @@
 
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Perception/AISense_Hearing.h"
 #include "ProjectDishonored/AI/Agent/AgentCharacter.h"
 #include "ProjectDishonored/Player/PlayerCharacter.h"
 
@@ -41,6 +42,8 @@ void AGun::TryFire()
 	
 	Fire();
 
+	UAISense_Hearing::ReportNoiseEvent(GetWorld(), FireRoot->GetComponentLocation(), 1.0f, this);
+	
 	FireFeedback();
 }
 

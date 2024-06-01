@@ -8,6 +8,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Perception/AISense_Hearing.h"
+#include "ProjectDishonored/Gameplay/Items/Gun.h"
 #include "ProjectDishonored/Utility/MathUtility.h"
 
 void AAgentController::BeginPlay()
@@ -66,24 +68,38 @@ float AAgentController::GetDetectionDecreaseRate()
 
 void AAgentController::IncreaseSuspicion()
 {
+	OnIncreaseSuspicion(SuspicionLevel);
+	
 	ChangeSuspicion(SuspicionLevel + 1);
+}
+
+void AAgentController::OnIncreaseSuspicion(int _PreviousSuspicion)
+{
 }
 
 void AAgentController::DecreaseSuspicion()
 {
+	OnDecreaseSuspicion(SuspicionLevel);
+	
 	ChangeSuspicion(SuspicionLevel - 1);
 }
 
-void AAgentController::ChangeSuspicion(int _Value)
+void AAgentController::OnDecreaseSuspicion(int _PreviousSuspicion)
 {
-	if (_Value < 0 || _Value > 2)
+	if (_PreviousSuspicion == 2)
+	{
+		SetDistractionLure(EDistractionType::LosingSightPlayer, PlayerLastKnownPosition);
+	}
+}
+
+void AAgentController::ChangeSuspicion(int _NewSuspicion)
+{
+	if (_NewSuspicion < 0 || _NewSuspicion > 2)
 		return;
 
-	SuspicionLevel = _Value;
+	SuspicionLevel = _NewSuspicion;
 	
 	UpdateDisplayedSuspicionUI();
-
-	// TODO Set a Distraction After the Attack when Player is Lost and Suspicion Decreases
 }
 
 void AAgentController::SetDistractionLure(EDistractionType _DistractionType, FVector _Position)
@@ -124,7 +140,7 @@ void AAgentController::SetFirstLureInterruption(EDistractionType _DistractionTyp
 		break;
 	}
 		
-	SetInterruption(InterruptionType, DistractionLureWaitTimes[_DistractionType]);
+	SetInterruption(InterruptionType, InterruptionWaitTimes[InterruptionType]);
 }
 
 void AAgentController::SetFinalLureInterruption(EDistractionType _DistractionType)
@@ -147,7 +163,7 @@ void AAgentController::SetFinalLureInterruption(EDistractionType _DistractionTyp
 		break;
 	}
 		
-	SetInterruption(InterruptionType, DistractionLureWaitTimes[_DistractionType]);
+	SetInterruption(InterruptionType, InterruptionWaitTimes[InterruptionType]);
 }
 
 void AAgentController::SetInterruption(EInterruptionType _InterruptionType, float _WaitTime)
@@ -163,13 +179,13 @@ void AAgentController::SetInvestigation()
 	// TODO Investigation Behaviour
 }
 
-bool AAgentController::TryLoseTrackOfChasedPlayer(float _DeltaTime)
+void AAgentController::TimerBeforeLosingTrackOfPlayer(float _DeltaTime)
 {
 	if (SuspicionLevel != 2)
-		return false;
+		return;
 
 	if (WillLosePlayerTrack == false)
-		return false;
+		return;
 
 	CurrentTrackDecreaseTime -= _DeltaTime;
 	if (CurrentTrackDecreaseTime <= 0)
@@ -177,8 +193,19 @@ bool AAgentController::TryLoseTrackOfChasedPlayer(float _DeltaTime)
 		PlayerTracked = false;
 		WillLosePlayerTrack = false;
 	}
+}
 
-	return true;
+void AAgentController::TimerBeforeJoiningChaseOfPlayer(float _DeltaTime)
+{
+	if (WillJoinPlayerChase == false)
+		return;
+
+	CurrentJoinChaseIncreaseTime += _DeltaTime;
+	if (CurrentJoinChaseIncreaseTime >= JoinChaseIncreaseRate)
+	{
+		ChangeSuspicion(2);
+		WillJoinPlayerChase = false;
+	}
 }
 
 void AAgentController::IncreaseTimeline()
@@ -227,14 +254,33 @@ void AAgentController::UpdatePerception(AActor* _Actor, FAIStimulus _Stimulus)
 	AAgentCharacter* OtherAgent = dynamic_cast<AAgentCharacter*>(_Actor);
 	if (OtherAgent != nullptr)
 	{
+		// Check if In Chase
+		if (OtherAgent->IsAttackingPlayer == true && SuspicionLevel != 2 && WillJoinPlayerChase == false)
+		{
+			WillJoinPlayerChase = true;
+			CurrentJoinChaseIncreaseTime = 0;
+
+			ChangeSuspicion(1);
+		}
+		
 		// Check if Dead
-		if (OtherAgent->GetIsDead() == false || OtherAgent->IsHidden() == true || DeadAgentsCache.Contains(OtherAgent->GetName()) == true)
-			return;
+		if (OtherAgent->GetIsDead() == true && OtherAgent->IsHidden() == false && DeadAgentsCache.Contains(OtherAgent->GetName()) == false)
+		{
+			FVector LurePosition = MathUtility::GetPositionAtDistance(OtherAgent->GetActorLocation(), ControlledAgent->GetActorLocation(), DistractionLureOffsetFromPosition);
+			SetDistractionLure(EDistractionType::SeeingDeadBody, LurePosition);
 
-		FVector LurePosition = MathUtility::GetPositionAtDistance(OtherAgent->GetActorLocation(), ControlledAgent->GetActorLocation(), DistractionLureOffsetFromPosition);
-		SetDistractionLure(EDistractionType::SeeingDeadBody, LurePosition);
+			DeadAgentsCache.Emplace(OtherAgent->GetName());
+		}
+	}
 
-		DeadAgentsCache.Emplace(OtherAgent->GetName());
+	// Try Sense Gunshot
+	AGun* Gun = dynamic_cast<AGun*>(_Actor);
+	if (Gun != nullptr)
+	{
+		if (_Stimulus.Type == UAISense::GetSenseID<UAISense_Hearing>())
+		{
+			SetDistractionLure(EDistractionType::HearingGunshot, _Stimulus.StimulusLocation);
+		}
 	}
 }
 
@@ -275,6 +321,8 @@ void AAgentController::UpdatePlayerVisible()
 
 void AAgentController::OnPlayerDeath()
 {
+	IsInterrupted = false;
+	CurrentDistraction = EDistractionType::None;
 	ChangeSuspicion(0);
 }
 
@@ -290,8 +338,8 @@ void AAgentController::Tick(float _DeltaTime)
 	UpdateDetectionMeterAngle();
 	UpdateDetectionTimeline();
 
-	// TODO Refac Behaviour Tree to Include this Method in a Service
-	TryLoseTrackOfChasedPlayer(_DeltaTime);
+	TimerBeforeLosingTrackOfPlayer(_DeltaTime);
+	TimerBeforeJoiningChaseOfPlayer(_DeltaTime);
 }
 
 void AAgentController::InitBehavior()

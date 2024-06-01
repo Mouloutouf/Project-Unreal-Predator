@@ -39,15 +39,19 @@ protected:
 	UFUNCTION()
 	void IncreaseSuspicion();
 	UFUNCTION()
+	void OnIncreaseSuspicion(int _PreviousSuspicion);
+	UFUNCTION()
 	void DecreaseSuspicion();
 	UFUNCTION()
-	void ChangeSuspicion(int _Value);
+	void OnDecreaseSuspicion(int _PreviousSuspicion);
+	UFUNCTION()
+	void ChangeSuspicion(int _NewSuspicion);
 	
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void UpdateDisplayedSuspicionUI();
 
 	UFUNCTION(BlueprintCallable)
-	void SetDistractionLure(EDistractionType _DistractionType, FVector _Position = FVector::ZeroVector);
+	void SetDistractionLure(EDistractionType _DistractionType, FVector _Position);
 	UFUNCTION(BlueprintCallable)
 	void SetFirstLureInterruption(EDistractionType _DistractionType);
 	UFUNCTION(BlueprintCallable)
@@ -58,7 +62,10 @@ protected:
 	void SetInvestigation();
 
 	UFUNCTION()
-	bool TryLoseTrackOfChasedPlayer(float _DeltaTime);
+	void TimerBeforeLosingTrackOfPlayer(float _DeltaTime);
+
+	UFUNCTION()
+	void TimerBeforeJoiningChaseOfPlayer(float _DeltaTime);
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void SetAimedStatus(bool _Status);
@@ -105,6 +112,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool PlayerTracked = false;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	FVector PlayerLastKnownPosition;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float MaxLureIncreaseRate = 0.0001;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -124,14 +134,22 @@ protected:
 	float SuspicionDecreaseRate = 1;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float ChaseDecreaseRate = 5;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float TrackDecreaseRate = 2;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float JoinChaseIncreaseRate = 2;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	bool WillLosePlayerTrack = false;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	float CurrentTrackDecreaseTime;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool WillJoinPlayerChase = false;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	float CurrentJoinChaseIncreaseTime;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float PlayerNormalDetectionRate = 1;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -159,7 +177,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TMap<TEnumAsByte<EDistractionType>, float> DistractionLureSpeeds;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TMap<TEnumAsByte<EDistractionType>, float> DistractionLureWaitTimes;
+	TMap<TEnumAsByte<EInterruptionType>, float> InterruptionWaitTimes;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TMap<TEnumAsByte<EInterruptionType>, FString> InterruptionVoicelineTypes;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
