@@ -12,7 +12,7 @@ void AWeapon::BeginPlay()
 	Super::BeginPlay();
 }
 
-void AWeapon::Tick(float DeltaTime)
+void AWeapon::Tick(float _DeltaTime)
 {
-	Super::Tick(DeltaTime);
+	Super::Tick(_DeltaTime);
 }

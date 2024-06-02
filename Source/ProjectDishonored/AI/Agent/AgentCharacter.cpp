@@ -47,8 +47,6 @@ void AAgentCharacter::BeginPlay()
 	PlayerReference = dynamic_cast<APlayerCharacter*>(PlayerPawn);
 
 	ControllerReference = dynamic_cast<AAgentController*>(GetController());
-
-	ControllerReference->InitBehavior();
 }
 
 // TODO Make better use of this

@@ -23,7 +23,8 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
-	virtual void Tick(float DeltaTime) override;
+	virtual void Tick(float _DeltaTime) override;
 
+	AAgentCharacter* GetWeaponOwner() const { return AgentOwner; }
 	void SetWeaponOwner(AAgentCharacter* _AgentOwner) { AgentOwner = _AgentOwner; }
 };

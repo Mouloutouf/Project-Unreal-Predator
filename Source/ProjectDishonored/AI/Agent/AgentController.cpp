@@ -26,6 +26,8 @@ void AAgentController::BeginPlay()
 	ChangeSuspicion(0);
 	
 	SetTimelinePlayRate(1 / MinSuspicionIncreaseRate);
+
+	InitBehavior();
 }
 
 void AAgentController::Stop() const
@@ -203,6 +205,7 @@ void AAgentController::TimerBeforeJoiningChaseOfPlayer(float _DeltaTime)
 	CurrentJoinChaseIncreaseTime += _DeltaTime;
 	if (CurrentJoinChaseIncreaseTime >= JoinChaseIncreaseRate)
 	{
+		// TODO IMPORTANT /!\ Change this to initialize the chase at the same state of the agent that triggered the join
 		ChangeSuspicion(2);
 		PlayerTracked = true;
 		OnTimelineRestart(0.5);
@@ -287,7 +290,7 @@ void AAgentController::UpdatePerception(AActor* _Actor, FAIStimulus _Stimulus)
 
 	// Try Sense Gunshot
 	AGun* Gun = dynamic_cast<AGun*>(_Actor);
-	if (Gun != nullptr)
+	if (Gun != nullptr && Gun->GetWeaponOwner() != ControlledAgent)
 	{
 		if (_Stimulus.Type == UAISense::GetSenseID<UAISense_Hearing>())
 		{
