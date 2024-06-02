@@ -56,5 +56,8 @@ public:
 	UUserWidget* BarsWidget;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	UUserWidget* HealthVignetteWidget;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	UUserWidget* GameOverWidget;
 };
