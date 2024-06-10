@@ -9,10 +9,10 @@
 UCLASS()
 class PROJECTPREDATOR_API APlayerHUD : public AHUD
 {
+	// TODO Make this class Blueprint only and gather the different UI Elements into global widgets
 	GENERATED_BODY()
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	
 public:

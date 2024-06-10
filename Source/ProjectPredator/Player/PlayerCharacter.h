@@ -44,6 +44,7 @@ protected:
 	void ActivateProne(bool _Activate, bool _ShouldAnimate);
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	// TODO Implement this method or Remove the feature altogether
 	void ProneAnimation(bool _Activate);
 	
 	UFUNCTION()

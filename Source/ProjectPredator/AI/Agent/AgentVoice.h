@@ -7,6 +7,10 @@
 #include "Components/ActorComponent.h"
 #include "AgentVoice.generated.h"
 
+struct PROJECTPREDATOR_API FIndexedSound : TKeyValuePair<int, USoundBase*>
+{
+};
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class PROJECTPREDATOR_API UAgentVoice : public UActorComponent
 {
@@ -18,9 +22,9 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	TKeyValuePair<int, USoundBase*> GetRandomVoiceline(const TArray<TKeyValuePair<int, USoundBase*>>& _Voicelines);
+	FIndexedSound GetRandomVoiceline(const TArray<FIndexedSound>& _Voicelines);
 
-	TArray<TKeyValuePair<int, USoundBase*>> GetAvailableVoicelines(FString _VoicelineKey);
+	TArray<FIndexedSound> GetAvailableVoicelines(FString _VoicelineKey);
 	
 	UFUNCTION()
 	void PlaySound(USoundBase* _Sound);

@@ -14,12 +14,10 @@ class PROJECTPREDATOR_API ACrossbow : public AActor
 {
 	GENERATED_BODY() 
 	
-public:	
-	// Sets default values for this actor's properties
+public:
 	ACrossbow();
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 	UFUNCTION(BlueprintCallable)
@@ -52,8 +50,7 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void UpdateAmmoUI();
 	
-public:	
-	// Called every frame
+public:
 	virtual void Tick(float _DeltaTime) override;
 
 	UFUNCTION(BlueprintCallable)

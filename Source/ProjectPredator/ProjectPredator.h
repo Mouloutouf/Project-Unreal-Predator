@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 
-
 #define HIT_COLLISION_CHANNEL ECC_GameTraceChannel1
 #define PROJECTILE_COLLISION_CHANNEL ECC_GameTraceChannel2
 

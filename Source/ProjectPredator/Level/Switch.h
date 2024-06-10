@@ -12,12 +12,10 @@ class PROJECTPREDATOR_API ASwitch : public AActor
 {
 	GENERATED_BODY()
 	
-public:	
-	// Sets default values for this actor's properties
+public:
 	ASwitch();
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 	UFUNCTION(BlueprintCallable)
@@ -26,8 +24,7 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent)
 	void PlayFeedbacks();
 	
-public:	
-	// Called every frame
+public:
 	virtual void Tick(float DeltaTime) override;
 
 protected:

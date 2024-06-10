@@ -1,14 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Crossbow.h"
 
 #include "Kismet/KismetSystemLibrary.h"
 
-// Sets default values
 ACrossbow::ACrossbow()
 {
- 	// Set this actor to call Tick() every frame. You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
 	Root = CreateDefaultSubobject<USceneComponent>(TEXT("SceneRoot"));
@@ -18,7 +15,6 @@ ACrossbow::ACrossbow()
 	ProjectileRoot->SetupAttachment(RootComponent);
 }
 
-// Called when the game starts or when spawned
 void ACrossbow::BeginPlay()
 {
 	Super::BeginPlay();
@@ -51,7 +47,9 @@ void ACrossbow::LoadProjectile()
 void ACrossbow::TryReload()
 {
 	if (CurrentAmmo > 0 && UKismetSystemLibrary::IsValid(LoadedProjectile) == false)
+	{
 		StartReload();
+	}
 }
 
 void ACrossbow::StartReload()
@@ -95,7 +93,6 @@ void ACrossbow::TryShootProjectile(FVector _ClosestHitPosition)
 	DecrementAmmo();
 }
 
-// Called every frame
 void ACrossbow::Tick(float _DeltaTime)
 {
 	Super::Tick(_DeltaTime);
