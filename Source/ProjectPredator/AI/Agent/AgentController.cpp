@@ -279,7 +279,7 @@ void AAgentController::UpdatePerception(AActor* _Actor, FAIStimulus _Stimulus)
 		}
 		
 		// Check if Dead
-		if (OtherAgent->GetIsDead() == true && OtherAgent->IsHidden() == false && DeadAgentsCache.Contains(OtherAgent->GetName()) == false)
+		if (OtherAgent->GetIsDead() == true && OtherAgent->IsHiding() == false && DeadAgentsCache.Contains(OtherAgent->GetName()) == false)
 		{
 			FVector LurePosition = MathUtility::GetPositionAtDistance(OtherAgent->GetActorLocation(), ControlledAgent->GetActorLocation(), DistractionLureOffsetFromPosition);
 			SetDistractionLure(EDistractionType::SeeingDeadBody, LurePosition);
@@ -301,7 +301,7 @@ void AAgentController::UpdatePerception(AActor* _Actor, FAIStimulus _Stimulus)
 
 void AAgentController::UpdatePlayerVisible()
 {
-	bool PlayerVisibilityStatus = PlayerSensed == true && PlayerReference->GetIsDead() == false && PlayerReference->IsHidden() == false;
+	bool PlayerVisibilityStatus = PlayerSensed == true && PlayerReference->GetIsDead() == false && PlayerReference->IsHiding() == false;
 	if (PlayerVisible != PlayerVisibilityStatus)
 	{
 		PlayerVisible = ControlledAgent->CanSeePlayer = PlayerVisibilityStatus;

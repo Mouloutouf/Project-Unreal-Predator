@@ -14,7 +14,7 @@ void IHideableInterface::GatherDetectableCapsules()
 	}
 }
 
-bool IHideableInterface::IsHidden()
+bool IHideableInterface::IsHiding()
 {
 	return GetHiddenCapsulesCount() >= GetDetectableCapsules().Num();
 }

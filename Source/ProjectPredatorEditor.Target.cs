@@ -11,5 +11,7 @@ public class ProjectPredatorEditorTarget : TargetRules
 		DefaultBuildSettings = BuildSettingsVersion.V2;
 
 		ExtraModuleNames.AddRange( new string[] { "ProjectPredator" } );
+
+		bOverrideBuildEnvironment = true;
 	}
 }

@@ -58,7 +58,7 @@ void AGun::Fire()
 	FVector ShootLocalPos = ShootTargetPos - StartPos;
 	
 	FVector RandomShootDir =  UKismetMathLibrary::RandomUnitVectorInConeInDegrees(ShootLocalPos.GetSafeNormal(), SpreadAngleDegrees);
-	float MaxLength = std::min(ShootLocalPos.Size(), Range);
+	float MaxLength = std::min((float)ShootLocalPos.Length(), Range);
 	FVector RandomShootLocalPos = RandomShootDir * MaxLength;
 	FVector RandomShootPos = RandomShootLocalPos + StartPos;
 

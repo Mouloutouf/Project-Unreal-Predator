@@ -32,5 +32,5 @@ public:
 	virtual int GetHiddenCapsulesCount() = 0;
 	virtual void ChangeHiddenCapsulesCount(int _Delta) = 0;
 
-	bool IsHidden();
+	bool IsHiding();
 };
