@@ -8,7 +8,6 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "ProjectPredator/Gameplay/Character/HideableInterface.h"
 #include "ProjectPredator/UI/PlayerHUD.h"
 #include "PlayerCharacter.generated.h"
 
@@ -20,7 +19,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEnergyChangedSignature);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayerDeathSignature);
 
 UCLASS()
-class PROJECTPREDATOR_API APlayerCharacter : public ACharacter, public IHideableInterface
+class PROJECTPREDATOR_API APlayerCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
@@ -90,9 +89,6 @@ protected:
 	
 	UFUNCTION()
 	void TryMakeNoise();
-
-	UFUNCTION()
-	void UpdateRaycastAndReticle();
 
 	UFUNCTION()
 	void UpdateEnergyAndHealth();
@@ -203,6 +199,8 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float MaxEnergy;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float StartEnergy;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	float CurrentEnergy;
 
@@ -237,9 +235,6 @@ protected:
 	APlayerController* ControllerReference;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	FVector CurrentHitPosition;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	AAgentCharacter* CurrentAgentInTakedownRange;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
@@ -254,12 +249,6 @@ protected:
 	FVector CurrentTakedownDirection;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float TakedownRagdollForce = 10000;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	TArray<UCapsuleComponent*> DetectableCapsules;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	int HiddenCapsulesCount;
 	
 public:
 	virtual void SetupPlayerInputComponent(UInputComponent* _PlayerInputComponent) override;
@@ -310,11 +299,6 @@ public:
 	void AddDeadAgent(AAgentCharacter* _Agent);
 	UFUNCTION()
 	void RemoveDeadAgent(const AAgentCharacter* _Agent);
-
-	virtual USceneComponent* GetCapsulesRoot() override { return Mesh; }
-	virtual TArray<UCapsuleComponent*>& GetDetectableCapsules() override { return DetectableCapsules; }
-	virtual int GetHiddenCapsulesCount() override { return HiddenCapsulesCount; }
-	virtual void ChangeHiddenCapsulesCount(int _Delta) override { HiddenCapsulesCount += _Delta; }
 	
 	//
 

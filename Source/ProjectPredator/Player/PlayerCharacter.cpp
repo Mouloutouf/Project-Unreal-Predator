@@ -28,8 +28,6 @@ APlayerCharacter::APlayerCharacter()
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
-	GatherDetectableCapsules();
 	
 	CanPerformJump = CanPerformProne = CanPerformSprint = CanPerformTakedown = true;
 
@@ -45,7 +43,7 @@ void APlayerCharacter::BeginPlay()
 	OnEnergyChanged.AddDynamic(this, &APlayerCharacter::UpdateEnergyUI);
 
 	SetHealth(MaxHealth);
-	SetEnergy(MaxEnergy);
+	SetEnergy(StartEnergy);
 
 	GetCharacterMovement()->MaxWalkSpeed = NormalSpeed;
 
@@ -278,35 +276,6 @@ void APlayerCharacter::TryMakeNoise()
 	}
 }
 
-void APlayerCharacter::UpdateRaycastAndReticle()
-{
-	FVector Start = Camera->GetComponentLocation();
-	FVector Dest = Camera->GetForwardVector() * 5000 + Camera->GetComponentLocation();
-
-	FHitResult OutHit;
-	bool HitStatus = UKismetSystemLibrary::LineTraceSingle(GetWorld(), Start, Dest,
-		UEngineTypes::ConvertToTraceType(HIT_COLLISION_CHANNEL), true, TArray<AActor*>(), EDrawDebugTrace::None, OutHit, true);
-	if (HitStatus == true)
-	{
-		CurrentHitPosition = OutHit.ImpactPoint;
-		AAgentCharacter* AgentCharacter = dynamic_cast<AAgentCharacter*>(OutHit.Component->GetOwner());
-
-		if (UKismetSystemLibrary::IsValid(AgentCharacter) == true && AgentCharacter->GetIsDead() == false)
-		{
-			HUDReference->SetReticleRed();
-		}
-		else
-		{
-			HUDReference->SetReticleWhite();
-		}
-	}
-	else
-	{
-		CurrentHitPosition = Dest;
-		HUDReference->SetReticleWhite();
-	}
-}
-
 void APlayerCharacter::UpdateEnergyAndHealth()
 {
 	float BaseEnergyDecreaseRate = VisionActive == true ? VisionActiveEnergyDecreaseRate : DefaultEnergyDecreaseRate;
@@ -476,9 +445,6 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* _PlayerInputCo
 	_PlayerInputComponent->BindAxis(TEXT("LookUpRate"), this, &APlayerCharacter::LookUpRate);
 	_PlayerInputComponent->BindAxis(TEXT("LookUp"), this, &APlayerCharacter::LookUp);
 
-	_PlayerInputComponent->BindAction(TEXT("Jump"), IE_Pressed, this, &APlayerCharacter::JumpPressed);
-	_PlayerInputComponent->BindAction(TEXT("Jump"), IE_Released, this, &APlayerCharacter::JumpReleased);
-
 	_PlayerInputComponent->BindAction(TEXT("Sprint"), IE_Pressed, this, &APlayerCharacter::SprintPressed);
 	_PlayerInputComponent->BindAction(TEXT("Sprint"), IE_Released, this, &APlayerCharacter::SprintReleased);
 
@@ -492,8 +458,6 @@ void APlayerCharacter::Tick(float _DeltaTime)
 {
 	Super::Tick(_DeltaTime);
 	
-	UpdateRaycastAndReticle();
-
 	// TODO Decide what to do of this
 	TryMakeNoise();
 

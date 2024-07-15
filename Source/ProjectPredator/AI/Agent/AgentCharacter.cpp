@@ -28,8 +28,6 @@ void AAgentCharacter::BeginPlay()
 	bUseControllerRotationYaw = false;
 
 	CustomDepthStencilAlive = Mesh->CustomDepthStencilValue;
-	
-	GatherDetectableCapsules();
 
 	TrySetAgentWeapon();
 	if (Weapon != nullptr)

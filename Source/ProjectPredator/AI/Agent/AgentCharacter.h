@@ -14,7 +14,7 @@ class AAgentController;
 class APath;
 
 UCLASS()
-class PROJECTPREDATOR_API AAgentCharacter : public ACharacter, public IHideableInterface
+class PROJECTPREDATOR_API AAgentCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
@@ -98,12 +98,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FName HeadCenterBone;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	TArray<UCapsuleComponent*> DetectableCapsules;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	int HiddenCapsulesCount = 0;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	AWeapon* Weapon = nullptr;
 
@@ -142,11 +136,6 @@ public:
 	}
 
 	AWeapon* GetWeapon() const { return Weapon; }
-	
-	virtual USceneComponent* GetCapsulesRoot() override { return Mesh; }
-	virtual TArray<UCapsuleComponent*>& GetDetectableCapsules() override { return DetectableCapsules; }
-	virtual int GetHiddenCapsulesCount() override { return HiddenCapsulesCount; }
-	virtual void ChangeHiddenCapsulesCount(int _Delta) override { HiddenCapsulesCount += _Delta; }
 	
 	//
 	
