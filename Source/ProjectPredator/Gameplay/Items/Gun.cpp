@@ -57,7 +57,7 @@ void AGun::Fire()
 	FVector ShootTargetPos = CurrentShootTarget != nullptr ? CurrentShootTarget->GetActorLocation() : CurrentShootLocation;
 	FVector ShootLocalPos = ShootTargetPos - StartPos;
 	
-	FVector RandomShootDir =  UKismetMathLibrary::RandomUnitVectorInConeInDegrees(ShootLocalPos.GetSafeNormal(), SpreadAngleDegrees);
+	FVector RandomShootDir = UKismetMathLibrary::RandomUnitVectorInConeInDegrees(ShootLocalPos.GetSafeNormal(), SpreadAngleDegrees);
 	float MaxLength = std::min((float)ShootLocalPos.Length(), Range);
 	FVector RandomShootLocalPos = RandomShootDir * MaxLength;
 	FVector RandomShootPos = RandomShootLocalPos + StartPos;

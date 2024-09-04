@@ -262,6 +262,14 @@ void APlayerCharacter::FinishConsumeBody()
 	SetConsumeWidgetVisible(DeadAgentsInRange.Num() > 0);
 }
 
+void APlayerCharacter::TryGrabBody()
+{
+}
+
+void APlayerCharacter::TryReleaseBody()
+{
+}
+
 void APlayerCharacter::SwitchVision()
 {
 	VisionActive = !VisionActive;
@@ -429,6 +437,21 @@ void APlayerCharacter::VisionPressed()
 		return;
 
 	SwitchVision();
+}
+
+void APlayerCharacter::GrabPressed()
+{
+	if (IsInTakedown == true || IsEating == true)
+		return;
+
+	if (TransportedBody == nullptr)
+	{
+		TryGrabBody();
+	}
+	else
+	{
+		TryReleaseBody();
+	}
 }
 
 // Called to bind functionality to input

@@ -83,6 +83,11 @@ protected:
 	void FinishConsumeBody();
 
 	UFUNCTION()
+	void TryGrabBody();
+	UFUNCTION()
+	void TryReleaseBody();
+	
+	UFUNCTION()
 	void SwitchVision();
 	UFUNCTION(BlueprintImplementableEvent)
 	void SwitchVisionAnimation(bool _Activate);
@@ -121,6 +126,8 @@ private:
 	void EatPressed();
 
 	void VisionPressed();
+
+	void GrabPressed();
 	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
@@ -160,6 +167,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool IsEating;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	AAgentCharacter* TransportedBody = nullptr;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool VisionActive;
 	

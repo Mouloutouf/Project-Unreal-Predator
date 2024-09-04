@@ -6,9 +6,6 @@
 #include "PathPoint.h"
 #include "PathPointInfo.generated.h"
 
-/**
- * 
- */
 USTRUCT(BlueprintType)
 struct PROJECTPREDATOR_API FPathPointInfo
 {

@@ -40,6 +40,9 @@ protected:
 	bool CheckPathEnd() const;
 
 	UFUNCTION()
+	void CheckPlayerInRange();
+	
+	UFUNCTION()
 	void CheckPlayerCanTakedown();
 	UFUNCTION()
 	void UpdatePlayerCanTakedown(bool _CanTakedown);

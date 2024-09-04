@@ -130,6 +130,11 @@ bool AAgentCharacter::CheckPathEnd() const
 	return CurrentPathIndex < 0;
 }
 
+void AAgentCharacter::CheckPlayerInRange()
+{
+	// TODO Make this a generic method for checking whether the player is close to the agent as well as checking for extra conditions
+}
+
 void AAgentCharacter::CheckPlayerCanTakedown()
 {
 	if (PlayerReference == nullptr || PlayerReference->GetIsInTakedown() == true)

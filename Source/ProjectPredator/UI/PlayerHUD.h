@@ -9,7 +9,7 @@
 UCLASS()
 class PROJECTPREDATOR_API APlayerHUD : public AHUD
 {
-	// TODO Make this class Blueprint only and gather the different UI Elements into global widgets
+	// TODO Remove the Widget References and only put them in Blueprint
 	GENERATED_BODY()
 
 protected:

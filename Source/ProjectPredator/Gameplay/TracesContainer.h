@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Character/BloodStain.h"
 #include "GameFramework/Actor.h"
 #include "TracesContainer.generated.h"
 
@@ -22,5 +23,5 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 protected:
-	// TODO Implement an Array of Linked Lists to store the different Traces in the world
+	TArray<TLinkedList<ABloodStain*>> BloodTraces;
 };

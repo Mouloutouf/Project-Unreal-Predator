@@ -22,7 +22,7 @@ protected:
 public:
 	virtual void Tick(float DeltaTime) override;
 
-	bool IsDry() { return Age >= MaximumAge; }
+	bool IsDry() const { return Age >= MaximumAge; }
 	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
