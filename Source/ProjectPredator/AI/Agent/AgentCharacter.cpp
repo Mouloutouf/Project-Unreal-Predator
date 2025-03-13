@@ -12,7 +12,6 @@
 #include "ProjectPredator/ProjectPredator.h"
 #include "ProjectPredator/AI/Navigation/Path.h"
 #include "ProjectPredator/Gameplay/Items/Gun.h"
-#include "ProjectPredator/Player/Projectile.h"
 
 AAgentCharacter::AAgentCharacter()
 {
@@ -250,27 +249,6 @@ void AAgentCharacter::EnableCharacter(bool _Enable)
 	if (_Enable == false)
 	{
 		Stop();
-	}
-}
-
-void AAgentCharacter::TryDeathByProjectile(AActor* _Other)
-{
-	if (IsDead == true)
-		return;
-
-	AProjectile* Projectile = dynamic_cast<AProjectile*>(_Other);
-	if (UKismetSystemLibrary::IsValid(Projectile) == false)
-		return;
-
-	if (Projectile->GetIsMoving() == false)
-		return;
-
-	FVector HitDirection = Projectile->GetRootComponent()->GetComponentRotation().Vector() * HitForce;
-	Death(HitDirection);
-
-	if (UKismetSystemLibrary::IsValid(Projectile) == true)
-	{
-		Projectile->Destroy();
 	}
 }
 

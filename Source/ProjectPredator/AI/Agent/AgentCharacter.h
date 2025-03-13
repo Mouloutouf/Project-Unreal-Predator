@@ -117,9 +117,6 @@ public:
 
 	UFUNCTION()
 	void EnableCharacter(bool _Enable);
-
-	UFUNCTION(BlueprintCallable) // DEPRECATED
-	void TryDeathByProjectile(AActor* _Other);
 	
 	UFUNCTION()
 	void Death(FVector _HitDirection);

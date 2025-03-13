@@ -80,7 +80,7 @@ void AGun::Fire()
 	
 	DrawDebugLine(GetWorld(), StartPos, RandomShootPos, PlayerHit ? FColor::Red : FColor::Blue, false, 2);
 
-	FVector Up = AgentOwner->GetActorUpVector();
+	FVector Up = AgentOwner != nullptr ? AgentOwner->GetActorUpVector() : GetActorUpVector();
 	FVector Right = UKismetMathLibrary::Cross_VectorVector(ShootLocalPos.GetSafeNormal(), Up);
 	float SpreadAngleRadians = SpreadAngleDegrees * (PI / 180);
 	DrawDebugCircle(GetWorld(), ShootTargetPos, sin(SpreadAngleRadians) * MaxLength, 32, FColor::White, false, 2, 0, 0, Right, Up);
