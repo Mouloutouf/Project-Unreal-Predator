@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "Gun.h"
-#include "GameFramework/Actor.h"
 #include "Turret.generated.h"
 
 UCLASS()
